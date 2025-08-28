@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bilder till A4-PDF</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Bilder till PDF (A4)</h1>
+      <p>Ladda upp flera bilder, beskärs automatiskt till kvadrater och läggs ut i en grid.
+        <br />Standardstorlek är 5,5 cm per bild (kan ändras).</p>
+    </header>
+
+    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" class="card">
+      <div class="field">
+        <label for="size">Bildstorlek (cm)</label>
+        <input id="size" name="size" type="number" step="0.1" min="1" value="5.5" required />
+      </div>
+
+      <div class="field">
+        <label for="images">Välj bilder</label>
+        <input id="images" name="images" type="file" accept="image/*" multiple required />
+      </div>
+
+      <button type="submit">Skapa PDF</button>
+    </form>
+
+    <footer>
+      <small>Tips: Högre värde ger större rutor, men färre på sidan. PDF genereras i 300 DPI.</small>
+    </footer>
+  </main>
+</body>
+</html>

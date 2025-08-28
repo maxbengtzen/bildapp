@@ -1,0 +1,167 @@
+/* ==============================
+   Standardstil (ljusläge)
+   ============================== */
+   /* Ensure consistent box-sizing to prevent input overflow */
+   *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #222;
+  }
+  
+  .container {
+    max-width: 760px;
+    margin: 40px auto;
+    padding: 0 16px;
+  }
+  
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+  }
+  
+  p {
+    margin: 0;
+    color: #555;
+  }
+  
+  .card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s ease;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .card:hover {
+    box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+  }
+  
+  .field {
+    margin-bottom: 16px;
+  }
+  
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  
+  input[type="number"],
+  input[type="file"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    background-color: #fff;
+    color: #222;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+    max-width: 100%;
+  }
+  
+  input[type="number"]:focus,
+  input[type="file"]:focus {
+    border-color: #5865f2;
+    box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+    outline: none;
+    transform: scale(1.02);
+  }
+  
+  button {
+    display: inline-block;
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-weight: 700;
+    background: #5865f2;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.1s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    max-width: 100%;
+  }
+  
+  button:hover {
+    transform: translateY(-2px) scale(1.02);
+    background-color: #4750c4;
+  }
+  
+  button:active {
+    transform: translateY(1px) scale(0.97);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2) inset;
+  }
+  
+  /* Footer */
+  footer {
+    margin-top: 16px;
+    text-align: center;
+    color: #888;
+  }
+  
+  /* ==============================
+     Dark mode
+     ============================== */
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: #0f1220;
+      color: #e7e9ee;
+    }
+  
+    p {
+      color: #b6bcc8;
+    }
+  
+    input[type="number"],
+    input[type="file"] {
+      background-color: #171a2b;
+      color: #e7e9ee;
+      border: 1px solid #2b2f45;
+    }
+  
+    input[type="number"]:focus,
+    input[type="file"]:focus {
+      border-color: #5865f2;
+      box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.3);
+      outline: none;
+      transform: scale(1.02);
+    }
+  
+    .card {
+      background-color: #171a2b;
+      color: #e7e9ee;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+  
+    .card:hover {
+      box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    }
+  
+    button {
+      background: #5865f2;
+      color: #fff;
+    }
+  
+    button:hover {
+      transform: translateY(-2px) scale(1.02);
+      background: #4750c4;
+    }
+  
+    button:active {
+      transform: translateY(1px) scale(0.97);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2) inset;
+    }
+  
+    footer {
+      color: #8f96a8;
+    }
+  }
