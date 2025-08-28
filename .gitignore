@@ -1,0 +1,31 @@
+# Ignore local docker-compose and env files
+docker-compose.yml
+.env
+.env.local
+.env.*
+
+# Python artifacts
+*.pyc
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+
+# Node/npm artifacts (if used)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+.coverage
