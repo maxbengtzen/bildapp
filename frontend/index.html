@@ -1,37 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bilder till A4-PDF</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-</head>
-<body>
-  <main class="container">
-    <header>
-      <h1>Bilder till PDF (A4)</h1>
-      <p>Ladda upp flera bilder, beskärs automatiskt till kvadrater och läggs ut i en grid.
-        <br />Standardstorlek är 5,5 cm per bild (kan ändras).</p>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Bilder till bebisboken</title>
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/output.css">
+  </head>
+  <body class="min-h-screen flex items-center justify-center p-8 bg-base-100">
+    <div id="root" class="w-full max-w-3xl px-4">
 
-    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data" class="card">
-      <div class="field">
-        <label for="size">Bildstorlek (cm)</label>
-        <input id="size" name="size" type="number" step="0.1" min="1" value="5.5" required />
+      <!-- Title and intro above the card -->
+      <header class="mb-6 text-center">
+        <h1 class="text-2xl md:text-3xl font-semibold">Bilder till PDF (A4)</h1>
+        <p class="mt-2 text-sm text-muted">Ladda upp flera bilder, beskärs automatiskt till kvadrater och läggs ut i en grid. Standardstorlek är 5,5 cm per bild (kan ändras).</p>
+      </header>
+
+      <!-- Card containing only the form -->
+      <div class="card shadow-xl bg-base-100">
+        <div class="card-body">
+          <form id="uploadForm" class="space-y-4 w-full" method="post" action="/upload" enctype="multipart/form-data">
+
+            <div>
+              <label class="label">
+                <span class="label-text">Bildstorlek (cm)</span>
+              </label>
+              <input type="number" step="0.1" name="size" value="5.5" class="input input-bordered w-full" />
+            </div>
+
+            <div>
+              <label class="label">
+                <span class="label-text">Välj bilder</span>
+              </label>
+              <input type="file" name="images" id="images" multiple class="file-input file-input-bordered w-full" accept="image/*" />
+            </div>
+
+            <div class="flex items-center justify-start">
+              <button type="submit" class="btn btn-primary">Skapa PDF</button>
+            </div>
+
+          </form>
+        </div>
       </div>
 
-      <div class="field">
-        <label for="images">Välj bilder</label>
-        <input id="images" name="images" type="file" accept="image/*" multiple required />
-      </div>
+      <!-- Small info/tips under the card -->
+      <p class="mt-6 text-center text-sm text-muted">Tips: Högre värde ger större rutor, men färre på sidan. PDF genereras i 300 DPI.</p>
 
-      <button type="submit">Skapa PDF</button>
-    </form>
+    </div>
 
-    <footer>
-      <small>Tips: Högre värde ger större rutor, men färre på sidan. PDF genereras i 300 DPI.</small>
-    </footer>
-  </main>
-</body>
+    <script>
+      // Apply system theme only (no UI toggle). Uses prefers-color-scheme and keeps in sync.
+      function applyTheme(isDark) {
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      }
+
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(prefersDark);
+
+      if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          applyTheme(e.matches);
+        });
+      }
+
+      // Upload form
+      const form = document.getElementById('uploadForm');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = new FormData(form);
+        const res = await fetch('/upload', { method: 'POST', body: data });
+        if (!res.ok) {
+          alert('Upload failed');
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'bilder.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+    </script>
+  </body>
 </html>
