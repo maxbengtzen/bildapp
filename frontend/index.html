@@ -3,8 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Bilder till bebisboken</title>
+    <title>Bilder till PDF</title>
     <link rel="icon" href="/favicon.svg" />
+
+    <!-- PWA: web manifest and theme -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6b46c1" />
+
+    <!-- iOS support -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Bilder till PDF">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
     <link rel="stylesheet" href="/output.css">
   </head>
   <body class="min-h-screen flex items-center justify-center p-8 bg-base-100">
@@ -83,6 +94,14 @@
         a.remove();
         URL.revokeObjectURL(url);
       });
+
+      // Register service worker for PWA (if supported)
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .catch(err => console.warn('SW registration failed:', err));
+        });
+      }
     </script>
   </body>
 </html>
