@@ -1,6 +1,6 @@
 {
-  "name": "bildapp-frontend",
-  "version": "1.0.0",
+  "name": "Gridprint",
+  "version": "0.1.0",
   "private": true,
     "scripts": {
       "build:css": "npx @tailwindcss/cli -i ./input.css -o ./output.css"
