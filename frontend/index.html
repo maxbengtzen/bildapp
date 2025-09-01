@@ -8,7 +8,7 @@
 
     <!-- PWA: web manifest and theme -->
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#6b46c1" />
+    <meta name="theme-color" content="#00D3BB" />
 
     <!-- iOS support -->
     <meta name="mobile-web-app-capable" content="yes">
@@ -18,45 +18,96 @@
 
     <link rel="stylesheet" href="/output.css">
   </head>
-  <body class="min-h-screen flex items-center justify-center p-8 bg-base-200">
-    <div id="root" class="w-full max-w-3xl px-4">
-
-      <!-- Title and intro above the card -->
-      <header class="mb-6 text-center">
-        <h1 class="text-3xl md:text-3xl font-semibold text-primary">Gridprint</h1>
-      </header>
-
-      <!-- Card containing only the form -->
-      <div class="card bg-base-100">
-        <div class="card-body">
-          <form id="uploadForm" class="space-y-4 w-full" method="post" action="/upload" enctype="multipart/form-data">
-
-            <div>
-              <label class="label">
-                <span class="label-text">Bildstorlek (cm)</span>
-              </label>
-              <input type="number" step="0.1" name="size" value="5.5" class="input w-full bg-base-200" />
-            </div>
-
-            <div>
-              <label class="label">
-                <span class="label-text">Välj bilder</span>
-              </label>
-              <input type="file" name="images" id="images" multiple class="file-input file-input w-full bg-base-200" accept="image/*" />
-            </div>
-
-            <div class="flex items-center justify-center">
-              <button type="submit" class="btn btn-primary">Skapa PDF</button>
-            </div>
-
-          </form>
-        </div>
-      </div>
-
-      <!-- Small info/tips under the card -->
-      <p class="mt-6 text-center text-sm text-muted">Tips: Högre värde ger större rutor, men färre på sidan. PDF genereras i 300 DPI.</p>
-
-    </div>
+  <body class="min-h-dvh bg-base-100">
+    <div class="min-h-dvh bg-base-100">
+<header class="pt-8 pb-4 text-center">
+<h1 class="text-3xl font-extrabold tracking-tight text-teal-700">Gridprint</h1>
+<p class="text-base-content/70 mt-1">Skapa utskrifts‑vänliga bildrutor i PDF.</p>
+</header>
+<main class="px-5">
+<div class="mx-auto max-w-md">
+<div class="card bg-base-200/60 backdrop-blur-md shadow-xl rounded-3xl">
+<div class="card-body space-y-5">
+<!-- Steg/överblick -->
+<ul class="steps w-full mb-2">
+<li class="step step-primary">Storlek</li>
+<li class="step">Bilder</li>
+<li class="step">Skapa PDF</li>
+</ul>
+<!-- Rutstorlek -->
+<label class="form-control">
+<div class="label">
+<span class="label-text font-medium">Rutstorlek (cm)</span>
+<div class="join hidden sm:inline-flex">
+<button type="button" class="btn btn-xs join-item btn-outline" data-size="3">3</button>
+<button type="button" class="btn btn-xs join-item btn-outline" data-size="5">5</button>
+<button type="button" class="btn btn-xs join-item btn-outline" data-size="7">7</button>
+</div>
+</div>
+<label class="input input-bordered flex items-center gap-2">
+<input id="size" name="size" class="grow" type="number" step="0.1" value="5.5" placeholder="5.5" inputmode="decimal" aria-describedby="cellSizeHelp" />
+<span class="opacity-60">cm</span>
+</label>
+<div id="cellSizeHelp" class="label">
+<span class="label-text-alt text-base-content/70">
+Större värde ⇒ färre rutor per sida. Ex: 5,0 cm ≈ 20 rutor på A4.
+</span>
+</div>
+</label>
+<!-- Papper & orientering -->
+<div class="grid grid-cols-2 gap-3">
+<label class="form-control">
+<div class="label"><span class="label-text font-medium">Pappersstorlek</span></div>
+<select name="paperSize" class="select select-bordered">
+<option>A4</option>
+<option>A3</option>
+</select>
+</label>
+<label class="form-control">
+<div class="label"><span class="label-text font-medium">Orientering</span></div>
+<select name="orientation" class="select select-bordered">
+<option>Stående</option>
+<option>Liggande</option>
+</select>
+</label>
+</div>
+<!-- Bilder (dropzone) -->
+<div class="form-control">
+<div class="label"><span class="label-text font-medium">Bilder</span></div>
+<label class="border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer hover:bg-base-200 transition" for="fileInput">
+<div class="text-base-content/70">
+<span class="font-medium">Lägg till bilder</span> eller släpp dem här
+</div>
+<div class="text-xs opacity-70 mt-1">PNG/JPG • flera filer stöds</div>
+<input id="fileInput" name="images" type="file" accept="image/*" multiple class="hidden" />
+</label>
+<!-- Thumbnails -->
+<div id="thumbs" class="mt-3 grid grid-cols-5 gap-2">
+</div>
+<div class="text-xs text-base-content/70 mt-1" id="imageCount">0 bilder valda</div>
+</div>
+<!-- Mini‑preview -->
+<div class="bg-base-100 rounded-2xl p-3 border">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium">Förhandsvisning</span>
+<span class="text-xs text-base-content/70" id="dpiText">300 DPI</span>
+</div>
+<div class="aspect-[4/3] w-full bg-base-200 rounded-xl grid gap-1 p-1" id="previewGrid" style="grid-template-columns: repeat(5, 1fr);">
+<!-- Dynamiskt genererat -->
+</div>
+</div>
+<!-- CTA -->
+<button class="btn btn-primary btn-lg rounded-2xl w-full" id="createBtn" disabled>
+Skapa PDF
+</button>
+<p class="text-sm text-base-content/70 text-center">
+PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
+</p>
+</div>
+</div>
+</div>
+</main>
+</div>
 
     <script>
       // Apply system theme only (no UI toggle). Uses prefers-color-scheme and keeps in sync.
@@ -73,11 +124,116 @@
         });
       }
 
-      // Upload form
+      // Elements
       const form = document.getElementById('uploadForm');
+      const sizeInput = document.getElementById('size');
+      const fileInput = document.getElementById('fileInput');
+      const thumbs = document.getElementById('thumbs');
+      const imageCount = document.getElementById('imageCount');
+      const previewGrid = document.getElementById('previewGrid');
+      const createBtn = document.getElementById('createBtn');
+      const paperSelect = document.querySelector('select[name="paperSize"]');
+      const orientationSelect = document.querySelector('select[name="orientation"]');
+
+      let selectedFiles = [];
+
+      // Size badges
+      const sizeBadges = document.querySelectorAll('[data-size]');
+      sizeBadges.forEach(badge => {
+        badge.addEventListener('click', () => {
+          sizeInput.value = badge.dataset.size;
+          updatePreview();
+        });
+      });
+
+      // File input events
+      fileInput.addEventListener('change', handleFiles);
+      // Drag and drop
+      const dropzone = fileInput.parentElement;
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('bg-base-content/10');
+      });
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('bg-base-content/10');
+      });
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('bg-base-content/10');
+        const files = Array.from(e.dataTransfer.files);
+        handleNewFiles(files);
+      });
+
+      function handleFiles(e) {
+        const files = Array.from(e.target.files);
+        handleNewFiles(files);
+      }
+
+      function handleNewFiles(files) {
+        selectedFiles = [...selectedFiles, ...files.filter(f => f.type.startsWith('image/'))];
+        fileInput.files = new DataTransfer().files; // Reset for next selection
+        renderThumbnails();
+        updatePreview();
+      }
+
+      function renderThumbnails() {
+        thumbs.innerHTML = '';
+        selectedFiles.forEach((file, index) => {
+          const figure = document.createElement('figure');
+          figure.className = 'relative';
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          img.className = 'w-full h-12 object-cover rounded';
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'absolute top-0 right-0 btn btn-xs btn-circle btn-error';
+          removeBtn.innerHTML = '×';
+          removeBtn.addEventListener('click', () => removeFile(index));
+          figure.appendChild(img);
+          figure.appendChild(removeBtn);
+          thumbs.appendChild(figure);
+        });
+        imageCount.textContent = `${selectedFiles.length} bilder valda`;
+        createBtn.disabled = selectedFiles.length === 0;
+      }
+
+      function removeFile(index) {
+        URL.revokeObjectURL(selectedFiles[index]);
+        selectedFiles.splice(index, 1);
+        renderThumbnails();
+        updatePreview();
+      }
+
+      // Preview grid
+      function updatePreview() {
+        const size = parseFloat(sizeInput.value) || 5.5;
+        const paperWidth = paperSelect.value === 'A4' ? 21 : 29.7; // cm
+        const paperHeight = paperSelect.value === 'A4' ? 29.7 : 42;
+        const orient = orientationSelect.value;
+        let width = orient === 'Stående' ? paperWidth : paperHeight;
+        let height = orient === 'Stående' ? paperHeight : paperWidth;
+        let cols = Math.floor(width / size);
+        let rows = Math.floor(height / size);
+        previewGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        previewGrid.innerHTML = '';
+        for (let i = 0; i < cols * rows; i++) {
+          const div = document.createElement('div');
+          div.className = 'bg-base-100/80 rounded';
+          previewGrid.appendChild(div);
+        }
+      }
+
+      // Initial
+      updatePreview();
+      paperSelect.addEventListener('change', updatePreview);
+      orientationSelect.addEventListener('change', updatePreview);
+      sizeInput.addEventListener('input', updatePreview);
+
+      // Upload form
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = new FormData(form);
+        // Add files
+        selectedFiles.forEach(file => data.append('images', file));
         const res = await fetch('/upload', { method: 'POST', body: data });
         if (!res.ok) {
           alert('Upload failed');
