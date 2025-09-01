@@ -49,7 +49,7 @@
 <span class="opacity-60">cm</span>
 </label>
 <div id="cellSizeHelp" class="label">
-<span class="label-text-alt text-base-content/70 break-words">
+<span class="label-text-alt text-base-content/70 break-all">
 Större värde ⇒ färre rutor per sida. Ex: 5,0 cm ≈ 20 rutor på A4.
 </span>
 </div>
@@ -225,29 +225,39 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
           alert('Välj bilder först');
           return;
         }
+        console.log('Sending data with size:', sizeInput.value, 'files:', selectedFiles.length);
         // Populate fileInput with selectedFiles for FormData
         const dt = new DataTransfer();
         selectedFiles.forEach(file => dt.items.add(file));
         fileInput.files = dt.files;
         const data = new FormData(form);
-        const res = await fetch('/upload', { method: 'POST', body: data });
-        if (!res.ok) {
-          alert('Upload failed');
-          return;
+        try {
+          const res = await fetch('/upload', { method: 'POST', body: data });
+          console.log('Response status:', res.status, 'OK:', res.ok);
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Upload failed with response:', errorText);
+            alert('Upload failed: ' + errorText);
+            return;
+          }
+          const blob = await res.blob();
+          console.log('Blob received, size:', blob.size);
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'bilder.pdf';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          // Clear after submit
+          selectedFiles = [];
+          renderThumbnails();
+          updateSteps();
+        } catch (error) {
+          console.error('Fetch error:', error);
+          alert('Network error: ' + error.message);
         }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'bilder.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        // Clear after submit
-        selectedFiles = [];
-        renderThumbnails();
-        updateSteps();
       });
 
       // Register service worker for PWA (if supported)
