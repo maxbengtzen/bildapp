@@ -1,11 +1,25 @@
 {
-  "name": "Bilder till PDF",
-  "short_name": "BilderPDF",
-  "description": "Skapa en A4-PDF från flera bilder.",
+  "name": "Gridprint",
+  "short_name": "Gridprint",
+  "description": "Skapa en A4-PDF från flera bilder i olika format och storlekar",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6b46c1",
+  "orientation": "portrait-primary",
+  "shortcuts": [
+    {
+      "name": "Skapa PDF",
+      "short_name": "Skapa PDF",
+      "url": "/",
+      "description": "Ladda upp bilder och skapa en PDF"
+    }
+  ],
+  "display_override": [
+  "window-controls-overlay",
+  "standalone",
+  "browser"
+],
   "icons": [
     {
       "src": "/icons/android-chrome-192x192.png",
