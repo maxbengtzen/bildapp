@@ -69,3 +69,15 @@
   --depth: 0;
   --noise: 0;
 }
+
+@font-face {
+    font-family: Bricolage Grotesque;
+    font-display: swap;
+    src: url("/fonts/BricolageGrotesque.woff2") format("woff2");
+}
+
+@theme {
+    --font-sans: Bricolage Grotesque, sans-serif;
+    --font-serif: Bricolage Grotesque, serif;
+    --font-mono: Bricolage Grotesque, monospace;
+}
