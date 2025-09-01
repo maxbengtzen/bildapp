@@ -54,27 +54,11 @@ Större värde ⇒ färre rutor per sida. Ex: 5,0 cm ≈ 20 rutor på A4.
 </span>
 </div>
 </label>
-<!-- Papper & orientering -->
-<div class="grid grid-cols-2 gap-3">
-<label class="form-control">
-<div class="label"><span class="label-text font-medium">Pappersstorlek</span></div>
-<select name="paperSize" class="select select-bordered">
-<option>A4</option>
-<option>A3</option>
-</select>
-</label>
-<label class="form-control">
-<div class="label"><span class="label-text font-medium">Orientering</span></div>
-<select name="orientation" class="select select-bordered">
-<option>Stående</option>
-<option>Liggande</option>
-</select>
-</label>
-</div>
+
 <!-- Bilder (dropzone) -->
 <div class="form-control">
 <div class="label"><span class="label-text font-medium">Bilder</span></div>
-<label class="border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer hover:bg-base-200 transition" for="fileInput">
+<label class="border-2 border-dashed rounded-2xl p-6 h-32 text-center cursor-pointer hover:bg-base-200 transition flex flex-col justify-center" for="fileInput">
 <div class="text-base-content/70">
 <span class="font-medium">Lägg till bilder</span> eller släpp dem här
 </div>
@@ -132,10 +116,18 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
       const imageCount = document.getElementById('imageCount');
       const previewGrid = document.getElementById('previewGrid');
       const createBtn = document.getElementById('createBtn');
-      const paperSelect = document.querySelector('select[name="paperSize"]');
-      const orientationSelect = document.querySelector('select[name="orientation"]');
+      const steps = document.querySelectorAll('.step');
 
       let selectedFiles = [];
+
+      function updateSteps() {
+        steps.forEach((step, index) => {
+          step.className = 'step';
+          if (index === 0 && parseFloat(sizeInput.value) > 0) step.classList.add('step-primary');
+          if (index === 1 && selectedFiles.length > 0) step.classList.add('step-primary');
+          if (index === 2 && selectedFiles.length > 0) step.classList.add('step-primary');
+        });
+      }
 
       // Size badges
       const sizeBadges = document.querySelectorAll('[data-size]');
@@ -143,6 +135,7 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
         badge.addEventListener('click', () => {
           sizeInput.value = badge.dataset.size;
           updatePreview();
+          updateSteps();
         });
       });
 
@@ -174,6 +167,7 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
         fileInput.files = new DataTransfer().files; // Reset for next selection
         renderThumbnails();
         updatePreview();
+        updateSteps();
       }
 
       function renderThumbnails() {
@@ -203,16 +197,13 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
         updatePreview();
       }
 
-      // Preview grid
+      // Preview grid (A4 Portrait only)
       function updatePreview() {
         const size = parseFloat(sizeInput.value) || 5.5;
-        const paperWidth = paperSelect.value === 'A4' ? 21 : 29.7; // cm
-        const paperHeight = paperSelect.value === 'A4' ? 29.7 : 42;
-        const orient = orientationSelect.value;
-        let width = orient === 'Stående' ? paperWidth : paperHeight;
-        let height = orient === 'Stående' ? paperHeight : paperWidth;
-        let cols = Math.floor(width / size);
-        let rows = Math.floor(height / size);
+        const paperWidth = 21; // A4 portrait width cm
+        const paperHeight = 29.7; // A4 portrait height cm
+        let cols = Math.max(1, Math.floor(paperWidth / size));
+        let rows = Math.max(1, Math.floor(paperHeight / size));
         previewGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
         previewGrid.innerHTML = '';
         for (let i = 0; i < cols * rows; i++) {
@@ -224,14 +215,19 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
 
       // Initial
       updatePreview();
-      paperSelect.addEventListener('change', updatePreview);
-      orientationSelect.addEventListener('change', updatePreview);
-      sizeInput.addEventListener('input', updatePreview);
+      sizeInput.addEventListener('input', () => { updatePreview(); updateSteps(); });
+      updateSteps();
 
       // Upload form
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const data = new FormData(form);
+        if (selectedFiles.length === 0) {
+          alert('Välj bilder först');
+          return;
+        }
+        const data = new FormData();
+        // Add size
+        data.append('size', sizeInput.value);
         // Add files
         selectedFiles.forEach(file => data.append('images', file));
         const res = await fetch('/upload', { method: 'POST', body: data });
