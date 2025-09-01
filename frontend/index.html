@@ -49,7 +49,7 @@
 <span class="opacity-60">cm</span>
 </label>
 <div id="cellSizeHelp" class="label">
-<span class="label-text-alt text-base-content/70">
+<span class="label-text-alt text-base-content/70 break-words">
 Större värde ⇒ färre rutor per sida. Ex: 5,0 cm ≈ 20 rutor på A4.
 </span>
 </div>
@@ -225,11 +225,11 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
           alert('Välj bilder först');
           return;
         }
-        const data = new FormData();
-        // Add size
-        data.append('size', sizeInput.value);
-        // Add files
-        selectedFiles.forEach(file => data.append('images', file));
+        // Populate fileInput with selectedFiles for FormData
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+        const data = new FormData(form);
         const res = await fetch('/upload', { method: 'POST', body: data });
         if (!res.ok) {
           alert('Upload failed');
@@ -244,6 +244,10 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
+        // Clear after submit
+        selectedFiles = [];
+        renderThumbnails();
+        updateSteps();
       });
 
       // Register service worker for PWA (if supported)
