@@ -3,7 +3,6 @@ const CACHE_NAME = 'gridprint-static-v0.0.1';
 const PRECACHE_URLS = [
   '/',               // index
   '/index.html',
-  '/output.css',
   '/favicon.svg',
   '/manifest.json',
   '/icons/android-chrome-192x192.png',
