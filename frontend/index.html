@@ -81,7 +81,7 @@
 
         <!-- PDF Preview Modal -->
         <div id="pdfPreviewModal" class="modal">
-          <div class="modal-box w-11/12 max-w-5xl h-5/6 max-h-screen">
+          <div class="modal-box w-[95vw] max-w-6xl h-[90vh] max-h-screen">
             <!-- Modal Header -->
             <div class="flex justify-between items-center mb-4">
               <div>
@@ -92,13 +92,17 @@
             </div>
 
             <!-- PDF Viewer -->
-            <div class="bg-base-200 rounded-lg h-4/5 mb-4 relative overflow-hidden">
+            <div class="bg-base-200 rounded-lg flex-1 mb-4 relative overflow-hidden">
               <embed id="pdfEmbed" type="application/pdf" class="w-full h-full rounded-lg" style="display: none;">
-              <div id="pdfFallback" class="flex items-center justify-center h-full text-center" style="display: none;">
+              <div id="pdfFallback" class="flex items-center justify-center h-full text-center p-8" style="display: none;">
                 <div>
-                  <div class="text-4xl mb-2">📄</div>
-                  <p class="text-base-content/70">PDF kan inte visas i denna webbläsare</p>
-                  <p class="text-sm text-base-content/50">Använd dela- eller ladda ner-knappen nedan</p>
+                  <div class="text-6xl mb-4">📄</div>
+                  <h4 class="text-lg font-semibold text-base-content mb-2">PDF Förhandsvisning</h4>
+                  <p class="text-base-content/70 mb-3">PDF kan inte visas direkt i iOS Safari</p>
+                  <p class="text-sm text-base-content/50 mb-4">PDF är redo - använd dela- eller ladda ner-knappen nedan</p>
+                  <div class="text-sm text-base-content/60 bg-base-100 rounded-lg p-3">
+                    <div class="font-medium" id="fallbackPdfInfo">PDF information</div>
+                  </div>
                 </div>
               </div>
               <div id="pdfLoading" class="flex items-center justify-center h-full">
@@ -395,21 +399,47 @@
           const pdfUrl = URL.createObjectURL(currentPdfBlob);
           debugLog('PDF URL created', { url: pdfUrl.substring(0, 50) + '...' });
           
-          // Test if browser can display PDFs
-          pdfEmbed.src = pdfUrl;
-          
-          // Fallback for browsers that can't display PDFs inline
-          pdfEmbed.onload = () => {
-            debugLog('PDF embed loaded successfully');
-            pdfLoading.style.display = 'none';
-            pdfEmbed.style.display = 'block';
-          };
-          
-          pdfEmbed.onerror = () => {
-            debugLog('PDF embed failed, showing fallback');
+          // iOS Safari has poor embed support, so use fallback immediately on iOS
+          if (isIOS) {
+            debugLog('iOS detected - using fallback instead of embed');
             pdfLoading.style.display = 'none';
             pdfFallback.style.display = 'flex';
-          };
+            
+            // Update fallback with PDF info
+            const fallbackInfo = document.getElementById('fallbackPdfInfo');
+            fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+          } else {
+            // Test if browser can display PDFs (non-iOS)
+            pdfEmbed.src = pdfUrl;
+            
+            // Set a timeout for embed loading
+            const embedTimeout = setTimeout(() => {
+              debugLog('PDF embed timeout - showing fallback');
+              pdfLoading.style.display = 'none';
+              pdfFallback.style.display = 'flex';
+              
+              const fallbackInfo = document.getElementById('fallbackPdfInfo');
+              fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+            }, 3000);
+            
+            // Fallback for browsers that can't display PDFs inline
+            pdfEmbed.onload = () => {
+              debugLog('PDF embed loaded successfully');
+              clearTimeout(embedTimeout);
+              pdfLoading.style.display = 'none';
+              pdfEmbed.style.display = 'block';
+            };
+            
+            pdfEmbed.onerror = () => {
+              debugLog('PDF embed failed, showing fallback');
+              clearTimeout(embedTimeout);
+              pdfLoading.style.display = 'none';
+              pdfFallback.style.display = 'flex';
+              
+              const fallbackInfo = document.getElementById('fallbackPdfInfo');
+              fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+            };
+          }
           
           // Show modal
           const modal = document.getElementById('pdfPreviewModal');
