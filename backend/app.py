@@ -115,10 +115,14 @@ def upload():
     
     # Polaroid frame calculations
     if layout == "polaroid":
-        # Classic Polaroid proportions: thin borders on top/sides, thick bottom
-        top_border_ratio = 0.08      # 8% of image size
-        side_border_ratio = 0.08     # 8% of image size
-        bottom_border_ratio = 0.15   # 15% of image size for caption
+        # Authentic Polaroid proportions based on real measurements:
+        # Real Polaroid: 6.2x6.2cm image, 7.2x8.6cm total frame
+        # Side borders: 0.5cm each = 8.06% of image size
+        # Top border: 0.5cm = 8.06% of image size
+        # Bottom border: 1.9cm = 30.65% of image size (caption area)
+        top_border_ratio = 0.0806     # 8.06% (0.5cm / 6.2cm)
+        side_border_ratio = 0.0806    # 8.06% (0.5cm / 6.2cm)
+        bottom_border_ratio = 0.3065  # 30.65% (1.9cm / 6.2cm)
         
         # Calculate frame dimensions in points
         top_border_pt = size_pt * top_border_ratio
@@ -129,7 +133,7 @@ def upload():
         frame_width_pt = size_pt + 2 * side_border_pt
         frame_height_pt = size_pt + top_border_pt + bottom_border_pt
         
-        print(f"Polaroid frame: {frame_width_pt:.1f}x{frame_height_pt:.1f}pt (image: {size_pt:.1f}pt)")
+        print(f"Polaroid frame: {frame_width_pt:.1f}x{frame_height_pt:.1f}pt (image: {size_pt:.1f}pt, authentic proportions)")
     else:
         # Standard layout - frame size equals image size
         frame_width_pt = size_pt
