@@ -89,30 +89,30 @@
 
 /* Inactive steps - subtle primary color with transparency */
 .steps .step:not(.step-primary) {
-    color: oklch(var(--color-primary) / 0.4);
+    color: oklch(77% 0.152 181.912 / 0.4);
 }
 
 /* Inactive step circles */
 .steps .step:not(.step-primary):before {
-    background-color: oklch(var(--color-primary) / 0.15);
-    border-color: oklch(var(--color-primary) / 0.3);
+    background-color: oklch(77% 0.152 181.912 / 0.15);
+    border-color: oklch(77% 0.152 181.912 / 0.3);
     border-width: 1px;
 }
 
 /* Lines between steps - make them more visible */
 .steps .step:not(:first-child):after {
-    background-color: oklch(var(--color-primary) / 0.2);
+    background-color: oklch(77% 0.152 181.912 / 0.2);
     height: 2px;
 }
 
 /* Completed step lines */
 .steps .step.step-primary + .step:after,
 .steps .step.step-primary:after {
-    background-color: oklch(var(--color-primary));
+    background-color: oklch(77% 0.152 181.912);
 }
 
 /* Active step text */
 .steps .step.step-primary {
-    color: oklch(var(--color-primary));
+    color: oklch(77% 0.152 181.912);
     font-weight: 600;
 }
