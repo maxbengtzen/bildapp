@@ -94,16 +94,51 @@ def upload():
     except (TypeError, ValueError):
         size_cm = 5.5
     
+    # Get layout parameter (default to standard)
+    layout = request.form.get("layout", "standard")
+    if layout not in ["standard", "polaroid"]:
+        layout = "standard"
+    
     # Check if preview mode is requested
     preview_mode = request.form.get("preview", "false").lower() == "true"
+    
+    print(f"Processing request with layout: {layout}, size: {size_cm}cm")
 
     # Konstanter
     DPI = 300               # rasterisering/skalning
     PT_PER_INCH = 72.0
     CM_PER_INCH = 2.54
+    
     # Storlek i pixlar (för att skala till 300 DPI) och i punkter (för PDF-placering)
     size_px = max(1, int(size_cm / CM_PER_INCH * DPI))
     size_pt = size_cm / CM_PER_INCH * PT_PER_INCH
+    
+    # Polaroid frame calculations
+    if layout == "polaroid":
+        # Authentic Polaroid proportions based on real measurements:
+        # Real Polaroid: 6.2x6.2cm image, 7.2x8.6cm total frame
+        # Side borders: 0.5cm each = 8.06% of image size
+        # Top border: 0.5cm = 8.06% of image size
+        # Bottom border: 1.9cm = 30.65% of image size (caption area)
+        top_border_ratio = 0.0806     # 8.06% (0.5cm / 6.2cm)
+        side_border_ratio = 0.0806    # 8.06% (0.5cm / 6.2cm)
+        bottom_border_ratio = 0.3065  # 30.65% (1.9cm / 6.2cm)
+        
+        # Calculate frame dimensions in points
+        top_border_pt = size_pt * top_border_ratio
+        side_border_pt = size_pt * side_border_ratio
+        bottom_border_pt = size_pt * bottom_border_ratio
+        
+        # Total frame size
+        frame_width_pt = size_pt + 2 * side_border_pt
+        frame_height_pt = size_pt + top_border_pt + bottom_border_pt
+        
+        print(f"Polaroid frame: {frame_width_pt:.1f}x{frame_height_pt:.1f}pt (image: {size_pt:.1f}pt, authentic proportions)")
+    else:
+        # Standard layout - frame size equals image size
+        frame_width_pt = size_pt
+        frame_height_pt = size_pt
+        top_border_pt = side_border_pt = bottom_border_pt = 0
 
     processed = []
     try:
@@ -142,13 +177,15 @@ def upload():
         c = canvas.Canvas(buffer, pagesize=A4)
         page_w, page_h = A4  # i pt (1/72")
 
-        # Hur många får plats på bredd/höjd?
-        cols = max(1, int(page_w // size_pt))
-        rows = max(1, int(page_h // size_pt))
+        # Hur många får plats på bredd/höjd? Use frame size for grid calculation
+        cols = max(1, int(page_w // frame_width_pt))
+        rows = max(1, int(page_h // frame_height_pt))
 
         # Jämn fördelning av mellanrum (gap) runt och mellan
-        gap_x = (page_w - cols * size_pt) / (cols + 1)
-        gap_y = (page_h - rows * size_pt) / (rows + 1)
+        gap_x = (page_w - cols * frame_width_pt) / (cols + 1)
+        gap_y = (page_h - rows * frame_height_pt) / (rows + 1)
+        
+        print(f"Grid calculation: {cols}x{rows} (frame: {frame_width_pt:.1f}x{frame_height_pt:.1f}pt)")
 
         x = y = 0
         for img in processed:
@@ -159,16 +196,38 @@ def upload():
                 c.showPage()
                 x = y = 0
 
+            # Calculate frame position
+            frame_xpos = gap_x + x * (frame_width_pt + gap_x)
+            # PDF-koordinater har origo nere till vänster
+            frame_ypos = page_h - (gap_y + (y + 1) * frame_height_pt + y * gap_y)
+            
+            if layout == "polaroid":
+                # Draw white background frame first
+                c.setFillColorRGB(1, 1, 1)  # White
+                c.rect(frame_xpos, frame_ypos, frame_width_pt, frame_height_pt, fill=1, stroke=0)
+                
+                # Add cutting guide - thin dashed border around the frame
+                c.setStrokeColorRGB(0.3, 0.3, 0.3)  # Dark gray
+                c.setLineWidth(0.5)  # Thin line
+                c.setDash([2, 2])  # Dashed pattern: 2pt dash, 2pt gap
+                c.rect(frame_xpos, frame_ypos, frame_width_pt, frame_height_pt, fill=0, stroke=1)
+                c.setDash([])  # Reset to solid line for future drawings
+                
+                # Calculate image position within the frame
+                img_xpos = frame_xpos + side_border_pt
+                img_ypos = frame_ypos + bottom_border_pt  # Leave space for caption at bottom
+            else:
+                # Standard layout - image fills the entire frame
+                img_xpos = frame_xpos
+                img_ypos = frame_ypos
+
             # Skriv bild till mellan-buffer för ImageReader
             img_io = io.BytesIO()
             img.save(img_io, format="JPEG", quality=95, optimize=True)
             img_io.seek(0)
 
-            xpos = gap_x + x * (size_pt + gap_x)
-            # PDF-koordinater har origo nere till vänster
-            ypos = page_h - (gap_y + (y + 1) * size_pt + y * gap_y)
-
-            c.drawImage(ImageReader(img_io), xpos, ypos, width=size_pt, height=size_pt)
+            # Draw the image
+            c.drawImage(ImageReader(img_io), img_xpos, img_ypos, width=size_pt, height=size_pt)
             x += 1
 
         c.save()
@@ -188,7 +247,8 @@ def upload():
                 'grid_info': {
                     'cols': cols,
                     'rows': rows,
-                    'size_cm': size_cm
+                    'size_cm': size_cm,
+                    'layout': layout
                 }
             })
         else:
