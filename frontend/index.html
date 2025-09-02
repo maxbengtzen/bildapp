@@ -34,56 +34,42 @@
                 </ul>
 
                 <!-- Bildstorlek -->
-                <label class="form-control">
+                <div class="form-control">
                   <div class="label">
                     <span class="label-text font-medium">Bildstorlek (cm)</span>
-                    <!-- Desktop preset buttons (compact) -->
-                    <div class="join hidden sm:inline-flex">
-                      <button type="button" class="btn btn-xs join-item btn-outline preset-btn" data-size="3">3</button>
-                      <button type="button" class="btn btn-xs join-item btn-outline preset-btn" data-size="5">5</button>
-                      <button type="button" class="btn btn-xs join-item btn-outline preset-btn" data-size="7">7</button>
-                    </div>
                   </div>
-                  <label class="input input-bordered flex items-center gap-2">
+                  
+                  <!-- Unified badge system for all devices -->
+                  <div class="flex gap-2 flex-wrap justify-center mb-3">
+                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="3">3cm</button>
+                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="5">5cm</button>
+                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="7">7cm</button>
+                    <button type="button" class="badge badge-lg cursor-pointer manual-badge">Manuell</button>
+                  </div>
+                  
+                  <!-- Number input (hidden by default, shown when manual is selected) -->
+                  <label class="input input-bordered flex items-center gap-2 hidden" id="manualInput">
                     <input id="size" name="size" class="grow" type="number" step="0.1" value="5.5" placeholder="5.5" aria-describedby="cellSizeHelp" />
                     <span class="opacity-60">cm</span>
                   </label>
-                  
-                  <!-- Mobile preset buttons (larger, below input) -->
-                  <div class="mt-3 sm:hidden">
-                    <div class="flex gap-2 justify-center">
-                      <button type="button" class="btn btn-sm btn-outline preset-btn flex-1 min-h-[44px]" data-size="3">
-                        <span class="text-lg font-semibold">3</span>
-                        <span class="text-xs opacity-70">cm</span>
-                      </button>
-                      <button type="button" class="btn btn-sm btn-outline preset-btn flex-1 min-h-[44px]" data-size="5">
-                        <span class="text-lg font-semibold">5</span>
-                        <span class="text-xs opacity-70">cm</span>
-                      </button>
-                      <button type="button" class="btn btn-sm btn-outline preset-btn flex-1 min-h-[44px]" data-size="7">
-                        <span class="text-lg font-semibold">7</span>
-                        <span class="text-xs opacity-70">cm</span>
-                      </button>
-                    </div>
-                  </div>
-                </label>
+                </div>
 
                 <!-- Layout Style -->
                 <div class="form-control">
                   <div class="label">
                     <span class="label-text font-medium">Layout</span>
                   </div>
-                  <div class="flex gap-3">
+                  <div class="flex gap-3 items-stretch">
                     <label class="cursor-pointer flex-1">
                       <input type="radio" name="layout" value="standard" class="hidden layout-radio" checked />
-                      <div class="layout-card card bg-base-100 border-2 border-base-300 hover:border-primary/50 transition-colors p-4 text-center">
+                      <div class="layout-card card bg-base-100 border-2 border-base-300 hover:border-primary/50 transition-colors p-4 text-center h-full flex flex-col justify-center">
                         <div class="font-medium text-base-content">Standard</div>
                         <div class="text-xs opacity-70 mt-1">Rutnät utan ramar</div>
                       </div>
                     </label>
                     <label class="cursor-pointer flex-1">
                       <input type="radio" name="layout" value="polaroid" class="hidden layout-radio" />
-                      <div class="layout-card card bg-base-100 border-2 border-base-300 hover:border-primary/50 transition-colors p-4 text-center">
+                      <div class="layout-card card bg-base-100 border-2 border-base-300 hover:border-primary/50 transition-colors p-4 text-center h-full flex flex-col justify-center">
                         <div class="font-medium text-base-content">Polaroid</div>
                         <div class="text-xs opacity-70 mt-1">Vita ramar + skrivplats</div>
                       </div>
@@ -110,12 +96,6 @@
                 <button type="submit" class="btn btn-primary btn-lg rounded-2xl w-full" id="createBtn" disabled>
                   Skapa PDF
                 </button>
-                <p class="text-sm text-base-content/70 text-center">
-                  PDF genereras i 300 DPI för skarp utskrift.
-                </p>
-                <p class="text-xs text-base-content/60 text-center">
-                  Tips: iOS kan öppna PDF i ny flik i stället för automatisk nedladdning.
-                </p>
               </div>
             </div>
           </div>
@@ -253,48 +233,85 @@
         });
       }
 
-      // Preset size buttons (both desktop and mobile)
-      const presetButtons = document.querySelectorAll('.preset-btn');
+      // Unified badge system for size selection
+      const presetBadges = document.querySelectorAll('.preset-badge');
+      const manualBadge = document.querySelector('.manual-badge');
+      const manualInput = document.getElementById('manualInput');
+      let isManualMode = false;
       
-      function updatePresetButtonStates() {
+      function updateBadgeStates() {
         const currentSize = parseFloat(sizeInput.value);
-        presetButtons.forEach(btn => {
-          const btnSize = parseFloat(btn.dataset.size);
-          if (Math.abs(currentSize - btnSize) < 0.01) {
-            // Mark as active - use primary styling
-            btn.classList.remove('btn-outline');
-            btn.classList.add('btn-primary');
+        let foundPreset = false;
+        
+        // Update preset badges
+        presetBadges.forEach(badge => {
+          const badgeSize = parseFloat(badge.dataset.size);
+          if (Math.abs(currentSize - badgeSize) < 0.01 && !isManualMode) {
+            // Active preset badge
+            badge.classList.remove('bg-base-200', 'text-base-content/70');
+            badge.classList.add('badge-primary');
+            foundPreset = true;
           } else {
-            // Mark as inactive - use outline styling
-            btn.classList.remove('btn-primary');
-            btn.classList.add('btn-outline');
+            // Inactive preset badge
+            badge.classList.remove('badge-primary');
+            badge.classList.add('bg-base-200', 'text-base-content/70');
           }
         });
+        
+        // Update manual badge
+        if (isManualMode || !foundPreset) {
+          manualBadge.classList.remove('bg-accent/20', 'text-accent/70');
+          manualBadge.classList.add('badge-accent');
+          isManualMode = true;
+          manualInput.classList.remove('hidden');
+        } else {
+          manualBadge.classList.remove('badge-accent');
+          manualBadge.classList.add('bg-accent/20', 'text-accent/70');
+          isManualMode = false;
+          manualInput.classList.add('hidden');
+        }
       }
       
-      presetButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const newSize = btn.dataset.size;
+      // Preset badge click handlers
+      presetBadges.forEach(badge => {
+        badge.addEventListener('click', () => {
+          const newSize = badge.dataset.size;
           sizeInput.value = newSize;
-          updatePresetButtonStates();
+          isManualMode = false;
+          updateBadgeStates();
           updateSteps();
           
           // Add subtle feedback animation
-          btn.style.transform = 'scale(0.95)';
+          badge.style.transform = 'scale(0.95)';
           setTimeout(() => {
-            btn.style.transform = '';
+            badge.style.transform = '';
           }, 100);
         });
       });
       
-      // Update button states when input changes manually
+      // Manual badge click handler
+      manualBadge.addEventListener('click', () => {
+        isManualMode = true;
+        updateBadgeStates();
+        sizeInput.focus();
+        
+        // Add subtle feedback animation
+        manualBadge.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          manualBadge.style.transform = '';
+        }, 100);
+      });
+      
+      // Update badge states when input changes manually
       sizeInput.addEventListener('input', () => {
-        updatePresetButtonStates();
+        if (isManualMode) {
+          updateBadgeStates();
+        }
         updateSteps();
       });
       
-      // Initialize button states
-      updatePresetButtonStates();
+      // Initialize badge states
+      updateBadgeStates();
 
       // Layout selection handling
       const layoutRadios = document.querySelectorAll('.layout-radio');
