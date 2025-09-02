@@ -247,26 +247,26 @@
         presetBadges.forEach(badge => {
           const badgeSize = parseFloat(badge.dataset.size);
           if (Math.abs(currentSize - badgeSize) < 0.01 && !isManualMode) {
-            // Active preset badge
-            badge.classList.remove('bg-base-200', 'text-base-content/70');
+            // Active preset badge - use primary color
+            badge.classList.remove('badge-outline');
             badge.classList.add('badge-primary');
             foundPreset = true;
           } else {
-            // Inactive preset badge
+            // Inactive preset badge - use outline style
             badge.classList.remove('badge-primary');
-            badge.classList.add('bg-base-200', 'text-base-content/70');
+            badge.classList.add('badge-outline');
           }
         });
         
         // Update manual badge
         if (isManualMode || !foundPreset) {
-          manualBadge.classList.remove('bg-accent/20', 'text-accent/70');
+          manualBadge.classList.remove('badge-outline');
           manualBadge.classList.add('badge-accent');
           isManualMode = true;
           manualInput.classList.remove('hidden');
         } else {
           manualBadge.classList.remove('badge-accent');
-          manualBadge.classList.add('bg-accent/20', 'text-accent/70');
+          manualBadge.classList.add('badge-outline');
           isManualMode = false;
           manualInput.classList.add('hidden');
         }
