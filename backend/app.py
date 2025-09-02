@@ -42,6 +42,45 @@ def manifest():
 def health():
     return jsonify(status='ok', heif=HEIF_ENABLED)
 
+@app.route('/debug', methods=['POST'])
+def debug():
+    """Debug endpoint to help troubleshoot iOS issues"""
+    try:
+        files = request.files.getlist("images")
+        debug_info = {
+            'files_received': len(files),
+            'heif_support': HEIF_ENABLED,
+            'file_details': []
+        }
+        
+        for i, f in enumerate(files):
+            file_info = {
+                'index': i,
+                'filename': f.filename,
+                'content_type': f.content_type,
+                'size': len(f.read())
+            }
+            f.seek(0)  # Reset file pointer
+            
+            # Try to identify and process the image
+            try:
+                with Image.open(f) as img_raw:
+                    img = img_raw.convert("RGB")
+                    file_info['pil_format'] = img_raw.format
+                    file_info['pil_mode'] = img_raw.mode
+                    file_info['dimensions'] = img_raw.size
+                    file_info['can_process'] = True
+            except Exception as e:
+                file_info['pil_error'] = str(e)
+                file_info['can_process'] = False
+            
+            f.seek(0)  # Reset again
+            debug_info['file_details'].append(file_info)
+        
+        return jsonify(debug_info)
+    except Exception as e:
+        return jsonify({'error': str(e), 'heif_support': HEIF_ENABLED}), 500
+
 @app.route('/upload', methods=['POST'])
 def upload():
     files = request.files.getlist("images")
@@ -64,22 +103,35 @@ def upload():
 
     processed = []
     try:
-        for f in files:
-            # PIL läser HEIC/HEIF om pillow-heif registrerats
-            with Image.open(f) as img_raw:
-                img = img_raw.convert("RGB")
-                img = ImageOps.exif_transpose(img)  # respektera orientering
+        for i, f in enumerate(files):
+            try:
+                # PIL läser HEIC/HEIF om pillow-heif registrerats
+                with Image.open(f) as img_raw:
+                    print(f"Processing file {i}: {f.filename} (format: {img_raw.format}, mode: {img_raw.mode})")
+                    img = img_raw.convert("RGB")
+                    img = ImageOps.exif_transpose(img)  # respektera orientering
 
-                # Centrera kvadratisk crop
-                w, h = img.size
-                min_side = min(w, h)
-                left = (w - min_side) // 2
-                top = (h - min_side) // 2
-                img = img.crop((left, top, left + min_side, top + min_side))
+                    # Centrera kvadratisk crop
+                    w, h = img.size
+                    min_side = min(w, h)
+                    left = (w - min_side) // 2
+                    top = (h - min_side) // 2
+                    img = img.crop((left, top, left + min_side, top + min_side))
 
-                # Skala till exakt size_px
-                img = img.resize((size_px, size_px), Image.LANCZOS)
-                processed.append(img)
+                    # Skala till exakt size_px
+                    img = img.resize((size_px, size_px), Image.LANCZOS)
+                    processed.append(img)
+                    print(f"Successfully processed file {i}")
+            except Exception as file_error:
+                print(f"Error processing file {i} ({f.filename}): {repr(file_error)}")
+                # If HEIF support is missing, give specific error message
+                if "cannot identify image file" in str(file_error) and f.filename and f.filename.lower().endswith(('.heic', '.heif')):
+                    if not HEIF_ENABLED:
+                        return f"HEIC/HEIF-format stöds inte på denna server. Filename: {f.filename}", 400
+                    else:
+                        return f"Kunde inte läsa HEIC/HEIF-fil trots aktivt stöd. Filename: {f.filename}", 400
+                # Re-raise other errors to be caught by outer try-catch
+                raise file_error
 
         # Skapa PDF i minnet
         buffer = io.BytesIO()

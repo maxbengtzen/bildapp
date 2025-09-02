@@ -4,13 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Gridprint</title>
-    <link rel="icon" href="/el="manifest"meta name="theme-color" content="#00D3BB" />
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#00D3BB" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Gridprint">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <!-- Din bundlade CSS (t.ex. Tailwind/DaisyUI) -->
     <link rel="stylesheet" href="/output.css">
+  </head>
+  <body>
     <div class="min-h-dvh bg-base-100">
       <header class="pt-8 pb-4 text-center">
         <h1 class="text-3xl font-extrabold tracking-tight text-teal-700">Gridprint</h1>
@@ -40,7 +44,7 @@
                     </div>
                   </div>
                   <label class="input input-bordered flex items-center gap-2">
-                    <input id="size" name="size" class="grow" type="number" step="0.1" value="5.5" placeholder="5.5" inputmode="decimal" aria-describedby="cellSizeHelp" />
+                    <input id="size" name="size" class="grow" type="number" step="0.1" value="5.5" placeholder="5.5" aria-describedby="cellSizeHelp" />
                     <span class="opacity-60">cm</span>
                   </label>
                 </label>
@@ -78,6 +82,42 @@
     </div>
 
     <script>
+      // iOS Debug logging system
+      const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+      const debugLogs = [];
+      
+      function debugLog(message, data = null) {
+        const timestamp = new Date().toISOString();
+        const logEntry = { timestamp, message, data, userAgent: navigator.userAgent };
+        debugLogs.push(logEntry);
+        console.log(`[DEBUG ${timestamp}] ${message}`, data || '');
+        
+        // On iOS, also show critical errors in alerts for debugging
+        if (isIOS && (message.includes('ERROR') || message.includes('FAIL'))) {
+          setTimeout(() => alert(`iOS Debug: ${message}`), 100);
+        }
+      }
+      
+      // Global error handlers for iOS debugging
+      window.addEventListener('error', (e) => {
+        debugLog('ERROR: JavaScript error', {
+          message: e.message,
+          filename: e.filename,
+          lineno: e.lineno,
+          colno: e.colno,
+          error: e.error?.toString()
+        });
+      });
+      
+      window.addEventListener('unhandledrejection', (e) => {
+        debugLog('ERROR: Unhandled promise rejection', {
+          reason: e.reason?.toString(),
+          promise: e.promise
+        });
+      });
+
+      debugLog('App initialized', { isIOS, userAgent: navigator.userAgent });
+
       // Apply system theme only (no UI toggle). Uses prefers-color-scheme and keeps in sync.
       function applyTheme(isDark) {
         document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -124,34 +164,75 @@
 
       // File input + DnD
       fileInput.addEventListener('change', handleFiles);
+      
+      // iOS Safari often has issues with drag and drop, so add extra safety
       const dropzone = fileInput.parentElement.parentElement; // Assuming label is parent, then div is parent
-      dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('bg-base-200/60'); // Add a visual cue for drag
-      });
-      dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('bg-base-200/60');
-      });
-      dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('bg-base-200/60');
-        const files = Array.from(e.dataTransfer.files);
-        handleNewFiles(files);
-      });
+      
+      if (!isIOS) {
+        // Only enable drag and drop on non-iOS devices as iOS Safari has limited support
+        dropzone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropzone.classList.add('bg-base-200/60'); // Add a visual cue for drag
+        });
+        dropzone.addEventListener('dragleave', () => {
+          dropzone.classList.remove('bg-base-200/60');
+        });
+        dropzone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('bg-base-200/60');
+          const files = Array.from(e.dataTransfer.files);
+          handleNewFiles(files);
+        });
+        debugLog('Drag and drop enabled (non-iOS)');
+      } else {
+        debugLog('Drag and drop disabled on iOS');
+      }
 
       function handleFiles(e) {
-        const files = Array.from(e.target.files || []);
+        debugLog('File input change event triggered', {
+          filesLength: e.target.files?.length,
+          isIOS
+        });
+        
+        // iOS Safari can sometimes have issues with FileList, so add extra checks
+        const files = [];
+        if (e.target.files) {
+          for (let i = 0; i < e.target.files.length; i++) {
+            const file = e.target.files[i];
+            if (file) {
+              files.push(file);
+            }
+          }
+        }
+        
+        debugLog('Files extracted from input', { extractedCount: files.length });
         handleNewFiles(files);
       }
 
       function handleNewFiles(files) {
         try {
-          selectedFiles = [...selectedFiles, ...files.filter(f => f.type.startsWith('image/'))];
-          // No thumbnails or preview grid, just update button state
+          debugLog('handleNewFiles called', {
+            filesCount: files.length,
+            fileTypes: files.map(f => f.type),
+            fileSizes: files.map(f => f.size),
+            fileNames: files.map(f => f.name)
+          });
+          
+          const imageFiles = files.filter(f => f.type.startsWith('image/'));
+          debugLog('Filtered image files', {
+            originalCount: files.length,
+            imageCount: imageFiles.length,
+            rejectedFiles: files.filter(f => !f.type.startsWith('image/')).map(f => ({ name: f.name, type: f.type }))
+          });
+          
+          selectedFiles = [...selectedFiles, ...imageFiles];
           createBtn.disabled = selectedFiles.length === 0;
           renderThumbnails();
           updateSteps();
+          
+          debugLog('Files added successfully', { totalSelected: selectedFiles.length });
         } catch (err) {
+          debugLog('ERROR: File handling failed', { error: err.message, stack: err.stack });
           console.error('File handling error:', err);
           alert('Kunde inte lägga till filerna: ' + err.message);
         }
@@ -190,81 +271,148 @@
 
       // Nedladdning med iOS-fallback
       function saveBlob(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
-        if (isIOS) {
-          // Öppna i ny flik
-          window.open(url, '_blank');
-          setTimeout(() => URL.revokeObjectURL(url), 10_000);
-          return;
+        debugLog('saveBlob called', { blobSize: blob.size, blobType: blob.type, filename, isIOS });
+        
+        try {
+          const url = URL.createObjectURL(blob);
+          debugLog('Object URL created', { url: url.substring(0, 50) + '...' });
+          
+          if (isIOS) {
+            debugLog('Using iOS fallback - opening in new tab');
+            // Öppna i ny flik
+            const newWindow = window.open(url, '_blank');
+            if (!newWindow) {
+              debugLog('ERROR: Failed to open new window - popup blocked?');
+              alert('Popup blockerad? PDF skapad men kunde inte öppnas automatiskt.');
+            } else {
+              debugLog('New window opened successfully');
+            }
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+              debugLog('Object URL revoked after timeout');
+            }, 10_000);
+            return;
+          }
+          
+          debugLog('Using standard download method');
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          debugLog('Standard download completed');
+        } catch (err) {
+          debugLog('ERROR: saveBlob failed', { error: err.message, stack: err.stack });
+          alert('Kunde inte spara PDF: ' + err.message);
         }
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
       }
 
       // Submit
       form.addEventListener('submit', (e) => {
         e.preventDefault();
+        debugLog('Form submitted', { selectedFilesCount: selectedFiles.length });
+        
         if (selectedFiles.length === 0) {
+          debugLog('ERROR: No files selected');
           alert('Välj bilder först');
           return;
         }
         const sizeVal = Math.max(0.1, parseFloat(sizeInput.value) || 5.5);
+        debugLog('Starting PDF creation', { sizeVal, filesCount: selectedFiles.length });
 
         withBusy(createBtn, async () => {
-          // Aktivera steg 3 när PDF-skapandet startar
-          pdfCreationStarted = true;
-          updateSteps();
-          
-          // Bygg FormData direkt från selectedFiles
-          const data = new FormData();
-          data.append('size', String(sizeVal));
-          selectedFiles.forEach((file) => data.append('images', file, file.name));
-
-          let res;
           try {
-            res = await fetch('/upload', { method: 'POST', body: data });
-          } catch (networkErr) {
-            console.error('Fetch error:', networkErr);
-            alert('Nätverksfel: ' + networkErr.message);
-            return;
-          }
+            // Aktivera steg 3 när PDF-skapandet startar
+            pdfCreationStarted = true;
+            updateSteps();
+            
+            // Bygg FormData direkt från selectedFiles
+            debugLog('Building FormData');
+            const data = new FormData();
+            data.append('size', String(sizeVal));
+            
+            selectedFiles.forEach((file, index) => {
+              debugLog(`Adding file ${index}`, { name: file.name, type: file.type, size: file.size });
+              data.append('images', file, file.name);
+            });
+            
+            debugLog('FormData built, sending request to /upload');
 
-          // Om servern svarar med HTML/text, visa fel
-          const contentType = res.headers.get('Content-Type') || '';
-          if (!res.ok) {
-            const text = await res.text();
-            console.error('Upload failed:', res.status, text);
-            alert(`Fel ${res.status}: ${text}`);
-            return;
-          }
-          if (!contentType.includes('application/pdf')) {
-            // Kan hända vid felaktig SW-cache eller serverfel
-            const text = await res.text();
-            console.warn('Ov. innehållstyp, förväntade PDF. Svar:', text.slice(0, 500));
-            alert('Servern returnerade inte en PDF. Kontrollera backend eller Service Worker.');
-            return;
-          }
+            let res;
+            try {
+              res = await fetch('/upload', {
+                method: 'POST',
+                body: data,
+                // Add explicit headers for iOS compatibility
+                headers: {
+                  // Don't set Content-Type - let browser set it with boundary
+                }
+              });
+              debugLog('Fetch completed', {
+                status: res.status,
+                statusText: res.statusText,
+                headers: Object.fromEntries(res.headers.entries())
+              });
+            } catch (networkErr) {
+              debugLog('ERROR: Network fetch failed', { error: networkErr.message, stack: networkErr.stack });
+              console.error('Fetch error:', networkErr);
+              alert('Nätverksfel: ' + networkErr.message);
+              return;
+            }
 
-          const blob = await res.blob();
-          if (!blob || blob.size === 0) {
-            alert('Tom PDF mottagen.');
-            return;
+            // Om servern svarar med HTML/text, visa fel
+            const contentType = res.headers.get('Content-Type') || '';
+            debugLog('Response details', {
+              ok: res.ok,
+              status: res.status,
+              contentType,
+              contentLength: res.headers.get('Content-Length')
+            });
+            
+            if (!res.ok) {
+              const text = await res.text();
+              debugLog('ERROR: Server error response', { status: res.status, text: text.slice(0, 500) });
+              console.error('Upload failed:', res.status, text);
+              alert(`Fel ${res.status}: ${text}`);
+              return;
+            }
+            
+            if (!contentType.includes('application/pdf')) {
+              // Kan hända vid felaktig SW-cache eller serverfel
+              const text = await res.text();
+              debugLog('ERROR: Wrong content type', { contentType, responseText: text.slice(0, 500) });
+              console.warn('Ov. innehållstyp, förväntade PDF. Svar:', text.slice(0, 500));
+              alert('Servern returnerade inte en PDF. Kontrollera backend eller Service Worker.');
+              return;
+            }
+
+            debugLog('Converting response to blob');
+            const blob = await res.blob();
+            debugLog('Blob created', { size: blob.size, type: blob.type });
+            
+            if (!blob || blob.size === 0) {
+              debugLog('ERROR: Empty blob received');
+              alert('Tom PDF mottagen.');
+              return;
+            }
+
+            debugLog('Saving blob as PDF');
+            saveBlob(blob, 'bilder.pdf');
+            debugLog('PDF save initiated successfully');
+
+            // Nollställ
+            selectedFiles = [];
+            pdfCreationStarted = false;
+            renderThumbnails();
+            updateSteps();
+            createBtn.disabled = true; // Disable button after successful upload
+            
+          } catch (err) {
+            debugLog('ERROR: Unexpected error in form submit', { error: err.message, stack: err.stack });
+            throw err; // Re-throw to be caught by withBusy
           }
-
-          saveBlob(blob, 'bilder.pdf');
-
-          // Nollställ
-          selectedFiles = [];
-          pdfCreationStarted = false;
-          renderThumbnails();
-          updateSteps();
-          createBtn.disabled = true; // Disable button after successful upload
         });
       });
 

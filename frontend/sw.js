@@ -62,7 +62,9 @@ self.addEventListener('fetch', (event) => {
   // Lägg till fler prefix här om du får fler API endpoints.
   const isAPI =
     isSame &&
-    (url.pathname.startsWith('/upload') || url.pathname.startsWith('/health'));
+    (url.pathname.startsWith('/upload') ||
+     url.pathname.startsWith('/health') ||
+     url.pathname.startsWith('/debug'));
 
   if (isAPI) {
     event.respondWith(
