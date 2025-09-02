@@ -2,7 +2,7 @@
 
 ![Cover photo](/assets/cover.png)
 
-En modern Progressive Web App (PWA) som tar flera uppladdade bilder, beskär dem till kvadrater och arrangerar dem i ett utskriftsvänligt A4-PDF. Appen är optimerad för mobila enheter med särskilt fokus på iOS Safari-kompatibilitet.
+En modern Progressive Web App (PWA) byggd med React och Flask som tar flera uppladdade bilder, beskär dem till kvadrater och arrangerar dem i ett utskriftsvänligt A4-PDF. Appen är optimerad för mobila enheter med särskilt fokus på iOS Safari-kompatibilitet.
 
 ## ✨ Funktioner
 
@@ -13,38 +13,96 @@ En modern Progressive Web App (PWA) som tar flera uppladdade bilder, beskär dem
 - **📸 Modernt bildstöd**: HEIC/HEIF-format (iPhone) samt traditionella PNG/JPG
 - **⚡ Responsiv design**: Fungerar perfekt på mobil, tablet och desktop
 - **🎨 Anpassad design**: Modern UI med Bricolage Grotesque-typsnitt och teal-färgschema
+- **⚛️ React-baserad**: Modern komponentarkitektur med hooks och state management
 
-## 🗂️ Projektstruktur
+## 🗂️ Projektstruktur (Monorepo)
 
-- **backend/**: Flask-app som hanterar bildbehandling och PDF-generering
-- **frontend/**: Modern frontend med Tailwind CSS, DaisyUI och PWA-funktionalitet
-- **Dockerfile**: Multistage-build som bygger frontend och packar Python-runtime
-- **docker-compose.example.yml**: Exempel för deployment med Docker Compose
+```
+gridprint/
+├── packages/
+│   ├── web/          # React frontend application
+│   │   ├── src/
+│   │   │   ├── components/    # React components
+│   │   │   ├── hooks/         # Custom React hooks
+│   │   │   └── utils/         # Utility functions
+│   │   ├── public/            # Static assets and PWA files
+│   │   └── package.json       # Frontend dependencies
+│   ├── api/          # Flask backend application
+│   │   ├── app.py             # Main Flask application
+│   │   └── requirements.txt   # Python dependencies
+│   └── shared/       # Shared assets (fonts, icons, manifest)
+├── package.json      # Root workspace configuration
+├── Dockerfile        # Multi-stage Docker build
+└── docker-compose.yml # Container orchestration
+```
 
-## 🚀 Kom igång med Docker Compose
+## 🚀 Kom igång
 
-1. Kopiera example-filen:
+### Utveckling (Rekommenderat)
+
+1. Installera alla dependencies:
    ```bash
-   cp docker-compose.example.yml docker-compose.yml
+   npm run install:all
    ```
 
-2. Bygg och starta:
+2. Starta utvecklingsservrar parallellt:
    ```bash
+   npm run dev
+   ```
+
+3. Öppna http://localhost:3000 (React) och http://localhost:5000 (API)
+
+### Docker Compose
+
+1. Bygg och starta:
+   ```bash
+   npm run docker:dev
+   # eller
    docker-compose up --build
    ```
 
-3. Öppna http://localhost:5000 i webbläsaren
+2. Öppna http://localhost:5000 i webbläsaren
 
 ## 💻 Utveckling
 
-### Frontend-utveckling
+### Frontend (React)
 
-Appen använder Tailwind CSS med DaisyUI för styling:
+React-appen använder modern hooks-baserad arkitektur:
 
 ```bash
-cd frontend
+cd packages/web
 npm install
-npm run build:css  # Bygger output.css från input.css
+npm start          # Utvecklingsserver
+npm run build      # Produktionsversion
+npm test          # Tester
+```
+
+### Backend (Flask)
+
+Flask API hanterar bildbehandling och PDF-generering:
+
+```bash
+cd packages/api
+pip install -r requirements.txt
+python app.py     # Utvecklingsserver
+```
+
+### Monorepo-kommandon
+
+```bash
+# Utveckling
+npm run dev                 # Starta både frontend och backend
+npm run dev:web            # Endast React
+npm run dev:api            # Endast Flask
+
+# Build och deploy
+npm run build              # Bygg React för produktion
+npm run docker:build      # Bygg Docker image
+npm run docker:run        # Kör Docker container
+
+# Maintenance
+npm run clean              # Rensa build-artifacts
+npm run install:all        # Installera alla dependencies
 ```
 
 ### Bildformat som stöds
@@ -93,6 +151,20 @@ npm run build:css  # Bygger output.css från input.css
 - **Service Worker**: Intelligent cache-hantering
 - **Native-känsla**: Fullskärmläge utan webbläsarfält
 
+## 🏗️ Arkitektur
+
+### React Frontend
+- **Component-based**: Modulära, återanvändbara komponenter
+- **Custom Hooks**: Separation av business logic och UI
+- **State Management**: React hooks för lokal state
+- **iOS Compatibility**: Dedikerat stöd för Safari-specifika funktioner
+
+### Flask Backend
+- **RESTful API**: Clean endpoints för bilduppladdning och PDF-generering
+- **Image Processing**: PIL/Pillow för bildmanipulation
+- **PDF Generation**: ReportLab för PDF-skapande
+- **Multi-format Support**: HEIC/HEIF-stöd via pillow-heif
+
 ## 📞 Kontakt
 
-Detta projekt har utvecklats från en enkel webapp till en fullfjädrad PWA. Bidrag välkomnas via issues och pull requests!
+Detta projekt har utvecklats från en enkel webapp till en fullfjädrad PWA med modern React-arkitektur. Bidrag välkomnas via issues och pull requests!

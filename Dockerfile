@@ -1,16 +1,18 @@
-# Stage 1: build frontend assets using Node
-FROM node:18-alpine AS nodebuilder
+# Stage 1: Build React frontend
+FROM node:18-alpine AS web-builder
 WORKDIR /app
 
-# Copy frontend package files and install dependencies, then build the production CSS
-COPY frontend/package*.json ./frontend/
-COPY frontend/ ./frontend/
-RUN cd frontend \
-    && npm install \
-    && npm run build:css || (echo "Build failed:" && cat npm-debug.log || true)
+# Copy root package.json for workspace setup
+COPY package*.json ./
+RUN npm install
 
-# Stage 2: final runtime image using Python
-FROM python:3.11-slim
+# Copy web package files and build
+COPY packages/web/package*.json ./packages/web/
+COPY packages/web/ ./packages/web/
+RUN cd packages/web && npm install && npm run build
+
+# Stage 2: Build Python runtime with Flask backend
+FROM python:3.11-slim AS final
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
@@ -18,17 +20,20 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Install minimal OS deps and Python requirements
-COPY backend/requirements.txt ./
+COPY packages/api/requirements.txt ./
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates curl \
   && pip install --no-cache-dir -r requirements.txt \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy backend code
-COPY backend/ ./
+COPY packages/api/ ./
 
-# Copy the whole frontend folder from the builder stage into /frontend (Flask expects ../frontend)
-COPY --from=nodebuilder /app/frontend /frontend
+# Copy built React app from web-builder stage
+COPY --from=web-builder /app/packages/web/build /frontend
+
+# Update Flask to serve from the new build directory
+ENV STATIC_FOLDER=/frontend
 
 EXPOSE 5000
 

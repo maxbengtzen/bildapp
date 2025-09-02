@@ -1,0 +1,47 @@
+{
+  "name": "gridprint-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gridprint - Modern Progressive Web App for creating printable PDF grids from images",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\" --names \"API,WEB\" --prefix-colors \"blue,green\"",
+    "dev:web": "cd packages/web && npm start",
+    "dev:api": "cd packages/api && python app.py",
+    "build": "npm run build:web",
+    "build:web": "cd packages/web && npm run build",
+    "install:all": "npm install && npm run install:web && npm run install:api",
+    "install:web": "cd packages/web && npm install",
+    "install:api": "cd packages/api && pip install -r requirements.txt",
+    "test": "cd packages/web && npm test",
+    "lint": "cd packages/web && npm run lint",
+    "clean": "rm -rf packages/*/node_modules packages/*/build packages/*/.npm",
+    "docker:build": "docker build -t gridprint .",
+    "docker:run": "docker run -p 5000:5000 gridprint",
+    "docker:dev": "docker-compose up --build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/gridprint"
+  },
+  "keywords": [
+    "pdf",
+    "image-processing",
+    "pwa",
+    "react",
+    "flask",
+    "ios-safari",
+    "gridprint"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
