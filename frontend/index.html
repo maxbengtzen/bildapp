@@ -486,7 +486,7 @@
           // Update modal info
           const pdfInfo = document.getElementById('pdfInfo');
           const layoutText = pdfData.grid_info.layout === 'polaroid' ? 'Polaroid-stil' : 'Standard rutnät';
-          pdfInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} ${layoutText} • ${(pdfData.size / 1024).toFixed(1)} KB`;
+          pdfInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} ${layoutText} • ${(pdfData.size / 1024 / 1024).toFixed(1)} MB`;
           
           // Try to show PDF in embed
           const pdfEmbed = document.getElementById('pdfEmbed');
@@ -515,7 +515,7 @@
             // Update fallback with PDF info and browser-specific message
             const fallbackInfo = document.getElementById('fallbackPdfInfo');
             const layoutText = pdfData.grid_info.layout === 'polaroid' ? 'Polaroid-stil' : 'Standard rutnät';
-            fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} ${layoutText} • ${(pdfData.size / 1024).toFixed(1)} KB`;
+            fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} ${layoutText} • ${(pdfData.size / 1024 / 1024).toFixed(1)} MB`;
             
             // Update fallback message based on browser
             const fallbackMessage = pdfFallback.querySelector('p');
@@ -541,7 +541,7 @@
               
               const fallbackInfo = document.getElementById('fallbackPdfInfo');
               const layoutText = pdfData.grid_info.layout === 'polaroid' ? 'Polaroid-stil' : 'Standard rutnät';
-              fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} ${layoutText} • ${(pdfData.size / 1024).toFixed(1)} KB`;
+              fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} ${layoutText} • ${(pdfData.size / 1024 / 1024).toFixed(1)} MB`;
               
               const fallbackMessage = pdfFallback.querySelector('p');
               fallbackMessage.textContent = 'PDF kan inte visas i denna webbläsare';
@@ -564,7 +564,7 @@
               
               const fallbackInfo = document.getElementById('fallbackPdfInfo');
               const layoutText = pdfData.grid_info.layout === 'polaroid' ? 'Polaroid-stil' : 'Standard rutnät';
-              fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} ${layoutText} • ${(pdfData.size / 1024).toFixed(1)} KB`;
+              fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} ${layoutText} • ${(pdfData.size / 1024 / 1024).toFixed(1)} MB`;
               
               const fallbackMessage = pdfFallback.querySelector('p');
               fallbackMessage.textContent = 'PDF kan inte visas i denna webbläsare';
