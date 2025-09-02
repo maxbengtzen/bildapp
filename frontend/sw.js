@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'gridprint-static-2025-09-02-v1';
+const CACHE_NAME = 'gridprint-static-v0.0.1';
 const PRECACHE_URLS = [
   '/',               // index
   '/index.html',
