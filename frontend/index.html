@@ -73,19 +73,19 @@
                   <div class="label">
                     <span class="label-text font-medium">Layout</span>
                   </div>
-                  <div class="flex gap-2">
+                  <div class="flex gap-3">
                     <label class="cursor-pointer flex-1">
-                      <input type="radio" name="layout" value="standard" class="radio radio-primary" checked />
-                      <div class="ml-2">
-                        <div class="font-medium">Standard</div>
-                        <div class="text-xs opacity-70">Rutnät utan ramar</div>
+                      <input type="radio" name="layout" value="standard" class="hidden layout-radio" checked />
+                      <div class="layout-card card bg-base-100 border-2 border-base-300 hover:border-primary/50 transition-colors p-4 text-center">
+                        <div class="font-medium text-base-content">Standard</div>
+                        <div class="text-xs opacity-70 mt-1">Rutnät utan ramar</div>
                       </div>
                     </label>
                     <label class="cursor-pointer flex-1">
-                      <input type="radio" name="layout" value="polaroid" class="radio radio-primary" />
-                      <div class="ml-2">
-                        <div class="font-medium">Polaroid</div>
-                        <div class="text-xs opacity-70">Vita ramar + skrivplats</div>
+                      <input type="radio" name="layout" value="polaroid" class="hidden layout-radio" />
+                      <div class="layout-card card bg-base-100 border-2 border-base-300 hover:border-primary/50 transition-colors p-4 text-center">
+                        <div class="font-medium text-base-content">Polaroid</div>
+                        <div class="text-xs opacity-70 mt-1">Vita ramar + skrivplats</div>
                       </div>
                     </label>
                   </div>
@@ -295,6 +295,31 @@
       
       // Initialize button states
       updatePresetButtonStates();
+
+      // Layout selection handling
+      const layoutRadios = document.querySelectorAll('.layout-radio');
+      const layoutCards = document.querySelectorAll('.layout-card');
+      
+      function updateLayoutSelection() {
+        layoutRadios.forEach((radio, index) => {
+          const card = layoutCards[index];
+          if (radio.checked) {
+            card.classList.remove('border-base-300');
+            card.classList.add('border-primary', 'bg-primary/5');
+          } else {
+            card.classList.remove('border-primary', 'bg-primary/5');
+            card.classList.add('border-base-300');
+          }
+        });
+      }
+      
+      // Add event listeners to layout radios
+      layoutRadios.forEach(radio => {
+        radio.addEventListener('change', updateLayoutSelection);
+      });
+      
+      // Initialize layout selection state
+      updateLayoutSelection();
 
       // File input + DnD
       fileInput.addEventListener('change', handleFiles);

@@ -202,6 +202,13 @@ def upload():
                 c.setFillColorRGB(1, 1, 1)  # White
                 c.rect(frame_xpos, frame_ypos, frame_width_pt, frame_height_pt, fill=1, stroke=0)
                 
+                # Add cutting guide - thin dashed border around the frame
+                c.setStrokeColorRGB(0.3, 0.3, 0.3)  # Dark gray
+                c.setLineWidth(0.5)  # Thin line
+                c.setDash([2, 2])  # Dashed pattern: 2pt dash, 2pt gap
+                c.rect(frame_xpos, frame_ypos, frame_width_pt, frame_height_pt, fill=0, stroke=1)
+                c.setDash([])  # Reset to solid line for future drawings
+                
                 # Calculate image position within the frame
                 img_xpos = frame_xpos + side_border_pt
                 img_ypos = frame_ypos + bottom_border_pt  # Leave space for caption at bottom
