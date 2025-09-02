@@ -5,17 +5,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Gridprint</title>
     <link rel="icon" href="/favicon.svg" />
-
-    <!-- PWA: web manifest and theme -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00D3BB" />
-
-    <!-- iOS support -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Gridprint">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-
     <link rel="stylesheet" href="/output.css">
   </head>
   <body class="min-h-dvh bg-base-100">
@@ -25,6 +20,7 @@
 <p class="text-base-content/70 mt-1">Skapa utskrifts‑vänliga bildrutor i PDF.</p>
 </header>
 <main class="px-5">
+        <form id="uploadForm">
 <div class="mx-auto max-w-md">
 <div class="card bg-base-200/60 backdrop-blur-md shadow-xl rounded-3xl">
 <div class="card-body space-y-5">
@@ -49,7 +45,6 @@
 <span class="opacity-60">cm</span>
 </label>
 </label>
-
 <!-- Bilder (dropzone) -->
 <div class="form-control">
 <div class="label"><span class="label-text font-medium">Bilder</span></div>
@@ -57,12 +52,11 @@
 <div class="text-base-content/70">
 <span class="font-medium">Lägg till bilder</span> eller släpp dem här
 </div>
-<div class="text-xs opacity-70 mt-1">PNG/JPG • flera filer stöds</div>
+<div class="text-xs opacity-70 mt-1">PNG/JPG/HEIC/HEIF • flera filer stöds</div>
 <input id="fileInput" name="images" type="file" accept="image/*" multiple class="hidden" />
 </label>
 <!-- Thumbnails -->
-<div id="thumbs" class="mt-3 grid grid-cols-5 gap-2">
-</div>
+                  <div id="thumbs" class="mt-3 grid grid-cols-5 gap-2"></div>
 <div class="text-xs text-base-content/70 mt-1" id="imageCount">0 bilder valda</div>
 </div>
 <!-- Mini‑preview -->
@@ -71,50 +65,54 @@
 <span class="text-sm font-medium">Förhandsvisning</span>
 <span class="text-xs text-base-content/70" id="dpiText">300 DPI</span>
 </div>
-<div class="aspect-[4/3] w-full bg-base-200 rounded-xl grid gap-1 p-1" id="previewGrid" style="grid-template-columns: repeat(5, 1fr);">
-<!-- Dynamiskt genererat -->
-</div>
+                  <div class="aspect-[4/3] w-full bg-base-200 rounded-xl grid gap-1 p-1" id="previewGrid" style="grid-template-columns: repeat(5, 1fr);"></div>
 </div>
 <!-- CTA -->
-<button class="btn btn-primary btn-lg rounded-2xl w-full" id="createBtn" disabled>
+                <button type="submit" class="btn btn-primary btn-lg rounded-2xl w-full" id="createBtn" disabled>
 Skapa PDF
 </button>
-<p class="text-sm text-base-content/70 text-center">
-PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
-</p>
+                <p class="text-sm text-base-content/70 text-center">PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.</p>
 </div>
 </div>
 </div>
+        </form>
 </main>
 </div>
-
     <script>
       // Apply system theme only (no UI toggle). Uses prefers-color-scheme and keeps in sync.
       function applyTheme(isDark) {
         document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
       }
-
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       applyTheme(prefersDark);
-
       if (window.matchMedia) {
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
           applyTheme(e.matches);
         });
       }
-
       // Elements
       const form = document.getElementById('uploadForm');
       const sizeInput = document.getElementById('size');
       const fileInput = document.getElementById('fileInput');
+      // Ensure elements exist
+      if (!form) {
+        console.error('Form element not found with id uploadForm');
+        return;
+      }
+      if (!sizeInput) {
+        console.error('Size input not found with id size');
+        return;
+      }
+      if (!fileInput) {
+        console.error('File input not found with id fileInput');
+        return;
+      }
       const thumbs = document.getElementById('thumbs');
       const imageCount = document.getElementById('imageCount');
       const previewGrid = document.getElementById('previewGrid');
       const createBtn = document.getElementById('createBtn');
       const steps = document.querySelectorAll('.step');
-
       let selectedFiles = [];
-
       function updateSteps() {
         steps.forEach((step, index) => {
           step.className = 'step';
@@ -123,7 +121,6 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
           if (index === 2 && selectedFiles.length > 0) step.classList.add('step-primary');
         });
       }
-
       // Size badges
       const sizeBadges = document.querySelectorAll('[data-size]');
       sizeBadges.forEach(badge => {
@@ -133,7 +130,6 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
           updateSteps();
         });
       });
-
       // File input events
       fileInput.addEventListener('change', handleFiles);
       // Drag and drop
@@ -151,20 +147,17 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
         const files = Array.from(e.dataTransfer.files);
         handleNewFiles(files);
       });
-
       function handleFiles(e) {
         const files = Array.from(e.target.files);
         handleNewFiles(files);
       }
-
       function handleNewFiles(files) {
         selectedFiles = [...selectedFiles, ...files.filter(f => f.type.startsWith('image/'))];
-        fileInput.files = new DataTransfer().files; // Reset for next selection
+        fileInput.files = new DataTransfer().files;
         renderThumbnails();
         updatePreview();
         updateSteps();
       }
-
       function renderThumbnails() {
         thumbs.innerHTML = '';
         selectedFiles.forEach((file, index) => {
@@ -184,19 +177,17 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
         imageCount.textContent = `${selectedFiles.length} bilder valda`;
         createBtn.disabled = selectedFiles.length === 0;
       }
-
       function removeFile(index) {
         URL.revokeObjectURL(selectedFiles[index]);
         selectedFiles.splice(index, 1);
         renderThumbnails();
         updatePreview();
       }
-
       // Preview grid (A4 Portrait only)
       function updatePreview() {
         const size = parseFloat(sizeInput.value) || 5.5;
-        const paperWidth = 21; // A4 portrait width cm
-        const paperHeight = 29.7; // A4 portrait height cm
+        const paperWidth = 21;
+        const paperHeight = 29.7;
         let cols = Math.max(1, Math.floor(paperWidth / size));
         let rows = Math.max(1, Math.floor(paperHeight / size));
         previewGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
@@ -207,13 +198,9 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
           previewGrid.appendChild(div);
         }
       }
-
-      // Initial
       updatePreview();
       sizeInput.addEventListener('input', () => { updatePreview(); updateSteps(); });
       updateSteps();
-
-      // Upload form
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (selectedFiles.length === 0) {
@@ -221,7 +208,6 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
           return;
         }
         console.log('Sending data with size:', sizeInput.value, 'files:', selectedFiles.length);
-        // Populate fileInput with selectedFiles for FormData
         const dt = new DataTransfer();
         selectedFiles.forEach(file => dt.items.add(file));
         fileInput.files = dt.files;
@@ -245,7 +231,6 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
           a.click();
           a.remove();
           URL.revokeObjectURL(url);
-          // Clear after submit
           selectedFiles = [];
           renderThumbnails();
           updateSteps();
@@ -254,8 +239,6 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
           alert('Network error: ' + error.message);
         }
       });
-
-      // Register service worker for PWA (if supported)
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
@@ -265,3 +248,4 @@ PDF genereras lokalt i webbläsaren i 300 DPI för skarp utskrift.
     </script>
   </body>
 </html>
+
