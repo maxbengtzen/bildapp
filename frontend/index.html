@@ -92,7 +92,7 @@
             </div>
 
             <!-- PDF Viewer -->
-            <div class="bg-base-200 rounded-lg flex-1 mb-4 relative overflow-hidden">
+            <div class="bg-base-200 rounded-lg h-[60vh] mb-4 relative overflow-hidden">
               <embed id="pdfEmbed" type="application/pdf" class="w-full h-full rounded-lg" style="display: none;">
               <div id="pdfFallback" class="flex items-center justify-center h-full text-center p-8" style="display: none;">
                 <div>
@@ -399,20 +399,39 @@
           const pdfUrl = URL.createObjectURL(currentPdfBlob);
           debugLog('PDF URL created', { url: pdfUrl.substring(0, 50) + '...' });
           
-          // iOS Safari has poor embed support, so use fallback immediately on iOS
-          if (isIOS) {
-            debugLog('iOS detected - using fallback instead of embed');
+          // Detect browsers with poor PDF embed support
+          const isEdge = /Edg/i.test(navigator.userAgent);
+          const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+          const hasEmbedIssues = isIOS || isEdge || isSafari;
+          
+          debugLog('Browser detection', { isIOS, isEdge, isSafari, hasEmbedIssues });
+          
+          if (hasEmbedIssues) {
+            debugLog('Browser with PDF embed issues detected - using fallback');
             pdfLoading.style.display = 'none';
             pdfFallback.style.display = 'flex';
             
-            // Update fallback with PDF info
+            // Update fallback with PDF info and browser-specific message
             const fallbackInfo = document.getElementById('fallbackPdfInfo');
             fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+            
+            // Update fallback message based on browser
+            const fallbackMessage = pdfFallback.querySelector('p');
+            if (isIOS) {
+              fallbackMessage.textContent = 'PDF kan inte visas direkt i iOS Safari';
+            } else if (isEdge) {
+              fallbackMessage.textContent = 'PDF kan inte visas direkt i Edge';
+            } else if (isSafari) {
+              fallbackMessage.textContent = 'PDF kan inte visas direkt i Safari';
+            } else {
+              fallbackMessage.textContent = 'PDF kan inte visas i denna webbläsare';
+            }
           } else {
-            // Test if browser can display PDFs (non-iOS)
+            // Try to display PDF in browsers that might support it (Chrome, Firefox)
+            debugLog('Attempting PDF embed in supported browser');
             pdfEmbed.src = pdfUrl;
             
-            // Set a timeout for embed loading
+            // Set a shorter timeout for embed loading
             const embedTimeout = setTimeout(() => {
               debugLog('PDF embed timeout - showing fallback');
               pdfLoading.style.display = 'none';
@@ -420,9 +439,12 @@
               
               const fallbackInfo = document.getElementById('fallbackPdfInfo');
               fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
-            }, 3000);
+              
+              const fallbackMessage = pdfFallback.querySelector('p');
+              fallbackMessage.textContent = 'PDF kan inte visas i denna webbläsare';
+            }, 2000);
             
-            // Fallback for browsers that can't display PDFs inline
+            // Success handler
             pdfEmbed.onload = () => {
               debugLog('PDF embed loaded successfully');
               clearTimeout(embedTimeout);
@@ -430,6 +452,7 @@
               pdfEmbed.style.display = 'block';
             };
             
+            // Error handler
             pdfEmbed.onerror = () => {
               debugLog('PDF embed failed, showing fallback');
               clearTimeout(embedTimeout);
@@ -438,6 +461,9 @@
               
               const fallbackInfo = document.getElementById('fallbackPdfInfo');
               fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+              
+              const fallbackMessage = pdfFallback.querySelector('p');
+              fallbackMessage.textContent = 'PDF kan inte visas i denna webbläsare';
             };
           }
           
