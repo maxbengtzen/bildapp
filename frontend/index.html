@@ -86,21 +86,24 @@
     </div>
 
     <script>
-      // Endast systemtema (följ "prefers-color-scheme").
+      // Apply system theme only (no UI toggle). Uses prefers-color-scheme and keeps in sync.
       function applyTheme(isDark) {
         document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
       }
+
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       applyTheme(prefersDark);
+
       if (window.matchMedia) {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => applyTheme(e.matches));
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          applyTheme(e.matches);
+        });
       }
 
-      // Elements
+      // Upload form
       const form = document.getElementById('uploadForm');
       const sizeInput = document.getElementById('size');
       const fileInput = document.getElementById('fileInput');
-      const thumbs = document.getElementById('thumbs');
       const imageCount = document.getElementById('imageCount');
       const previewGrid = document.getElementById('previewGrid');
       const createBtn = document.getElementById('createBtn');
@@ -130,17 +133,17 @@
 
       // File input + DnD
       fileInput.addEventListener('change', handleFiles);
-      const dropzone = fileInput.parentElement;
+      const dropzone = fileInput.parentElement.parentElement; // Assuming label is parent, then div is parent
       dropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropzone.classList.add('bg-base-content/10');
+        dropzone.classList.add('bg-base-200/60'); // Add a visual cue for drag
       });
       dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('bg-base-content/10');
+        dropzone.classList.remove('bg-base-200/60');
       });
       dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
-        dropzone.classList.remove('bg-base-content/10');
+        dropzone.classList.remove('bg-base-200/60');
         const files = Array.from(e.dataTransfer.files);
         handleNewFiles(files);
       });
@@ -153,9 +156,8 @@
       function handleNewFiles(files) {
         try {
           selectedFiles = [...selectedFiles, ...files.filter(f => f.type.startsWith('image/'))];
-          renderThumbnails();
-          updatePreview();
-          updateSteps();
+          // No thumbnails or preview grid, just update button state
+          createBtn.disabled = selectedFiles.length === 0;
         } catch (err) {
           console.error('File handling error:', err);
           alert('Kunde inte lägga till filerna: ' + err.message);
@@ -167,25 +169,6 @@
         objectUrls.forEach(u => { try { URL.revokeObjectURL(u); } catch {} });
         objectUrls = [];
 
-        thumbs.innerHTML = '';
-        selectedFiles.forEach((file, index) => {
-          const figure = document.createElement('figure');
-          figure.className = 'relative';
-          const img = document.createElement('img');
-          const url = URL.createObjectURL(file);
-          objectUrls.push(url);
-          img.src = url;
-          img.alt = file.name || 'bild';
-          img.className = 'w-full h-12 object-cover rounded';
-          const removeBtn = document.createElement('button');
-          removeBtn.className = 'absolute top-0 right-0 btn btn-xs btn-circle btn-error';
-          removeBtn.setAttribute('type', 'button');
-          removeBtn.innerHTML = '×';
-          removeBtn.addEventListener('click', () => removeFile(index));
-          figure.appendChild(img);
-          figure.appendChild(removeBtn);
-          thumbs.appendChild(figure);
-        });
         imageCount.textContent = `${selectedFiles.length} bilder valda`;
         createBtn.disabled = selectedFiles.length === 0;
       }
@@ -300,15 +283,15 @@
 
           // Nollställ
           selectedFiles = [];
-          renderThumbnails();
-          updateSteps();
+          createBtn.disabled = true; // Disable button after successful upload
         });
       });
 
       // Registrera SW om den finns (se till att /sw.js inte cache:ar /upload)
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW registration failed:', err));
+          navigator.serviceWorker.register('/sw.js')
+            .catch(err => console.warn('SW registration failed:', err));
         });
       }
     </script>
