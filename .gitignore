@@ -29,3 +29,6 @@ build/
 # Logs
 *.log
 .coverage
+
+# Ignore Continue project settings
+/.continue/

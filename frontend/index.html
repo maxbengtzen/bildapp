@@ -3,63 +3,196 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Bilder till PDF</title>
+    <title>Gridprint</title>
     <link rel="icon" href="/favicon.svg" />
-
-    <!-- PWA: web manifest and theme -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#6b46c1" />
-
-    <!-- iOS support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#00D3BB" />
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Bilder till PDF">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Gridprint">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-
+    <!-- Din bundlade CSS (t.ex. Tailwind/DaisyUI) -->
     <link rel="stylesheet" href="/output.css">
   </head>
-  <body class="min-h-screen flex items-center justify-center p-8 bg-base-100">
-    <div id="root" class="w-full max-w-3xl px-4">
-
-      <!-- Title and intro above the card -->
-      <header class="mb-6 text-center">
-        <h1 class="text-2xl md:text-3xl font-semibold">Bilder till PDF (A4)</h1>
-        <p class="mt-2 text-sm text-muted">Ladda upp flera bilder, beskärs automatiskt till kvadrater och läggs ut i en grid. Standardstorlek är 5,5 cm per bild (kan ändras).</p>
+  <body>
+    <div class="min-h-dvh bg-base-100">
+      <header class="pt-8 pb-4 text-center">
+        <h1 class="text-3xl font-extrabold tracking-tight text-teal-700">Gridprint</h1>
+        <p class="text-base-content/70 mt-1">Skapa utskriftsvänliga bildrutor i PDF.</p>
       </header>
 
-      <!-- Card containing only the form -->
-      <div class="card shadow-xl bg-base-100">
-        <div class="card-body">
-          <form id="uploadForm" class="space-y-4 w-full" method="post" action="/upload" enctype="multipart/form-data">
+      <main class="px-5">
+        <form id="uploadForm" enctype="multipart/form-data">
+          <div class="mx-auto max-w-md">
+            <div class="card bg-base-200/60 backdrop-blur-md shadow-xl rounded-3xl">
+              <div class="card-body space-y-5">
+                <!-- Steg/överblick -->
+                <ul class="steps w-full mb-2">
+                  <li class="step step-primary">Storlek</li>
+                  <li class="step">Bilder</li>
+                  <li class="step">Skapa PDF</li>
+                </ul>
 
-            <div>
-              <label class="label">
-                <span class="label-text">Bildstorlek (cm)</span>
-              </label>
-              <input type="number" step="0.1" name="size" value="5.5" class="input input-bordered w-full" />
+                <!-- Bildstorlek -->
+                <label class="form-control">
+                  <div class="label">
+                    <span class="label-text font-medium">Bildstorlek (cm)</span>
+                    <!-- Desktop preset buttons (compact) -->
+                    <div class="join hidden sm:inline-flex">
+                      <button type="button" class="btn btn-xs join-item btn-outline preset-btn" data-size="3">3</button>
+                      <button type="button" class="btn btn-xs join-item btn-outline preset-btn" data-size="5">5</button>
+                      <button type="button" class="btn btn-xs join-item btn-outline preset-btn" data-size="7">7</button>
+                    </div>
+                  </div>
+                  <label class="input input-bordered flex items-center gap-2">
+                    <input id="size" name="size" class="grow" type="number" step="0.1" value="5.5" placeholder="5.5" aria-describedby="cellSizeHelp" />
+                    <span class="opacity-60">cm</span>
+                  </label>
+                  
+                  <!-- Mobile preset buttons (larger, below input) -->
+                  <div class="mt-3 sm:hidden">
+                    <div class="flex gap-2 justify-center">
+                      <button type="button" class="btn btn-sm btn-outline preset-btn flex-1 min-h-[44px]" data-size="3">
+                        <span class="text-lg font-semibold">3</span>
+                        <span class="text-xs opacity-70">cm</span>
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline preset-btn flex-1 min-h-[44px]" data-size="5">
+                        <span class="text-lg font-semibold">5</span>
+                        <span class="text-xs opacity-70">cm</span>
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline preset-btn flex-1 min-h-[44px]" data-size="7">
+                        <span class="text-lg font-semibold">7</span>
+                        <span class="text-xs opacity-70">cm</span>
+                      </button>
+                    </div>
+                  </div>
+                </label>
+
+                <!-- Bilder (dropzone) -->
+                <div class="form-control">
+                  <div class="label"><span class="label-text font-medium">Bilder</span></div>
+                  <label class="border-2 border-dashed rounded-2xl p-6 h-32 text-center cursor-pointer hover:bg-base-200 transition flex flex-col justify-center" for="fileInput">
+                    <div class="text-base-content/70">
+                      <span class="font-medium">Lägg till bilder</span> eller släpp dem här
+                    </div>
+                    <div class="text-xs opacity-70 mt-1">PNG/JPG/HEIC/HEIF • flera filer stöds</div>
+                    <input id="fileInput" name="images" type="file" accept="image/*" multiple class="hidden" />
+                  </label>
+                  <!-- Thumbnails -->
+                  <div class="text-xs text-base-content/70 mt-1" id="imageCount">0 bilder valda</div>
+                </div>
+
+
+                <!-- CTA -->
+                <button type="submit" class="btn btn-primary btn-lg rounded-2xl w-full" id="createBtn" disabled>
+                  Skapa PDF
+                </button>
+                <p class="text-sm text-base-content/70 text-center">
+                  PDF genereras i 300 DPI för skarp utskrift.
+                </p>
+                <p class="text-xs text-base-content/60 text-center">
+                  Tips: iOS kan öppna PDF i ny flik i stället för automatisk nedladdning.
+                </p>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- PDF Preview Modal -->
+        <div id="pdfPreviewModal" class="modal">
+          <div class="modal-box w-[95vw] max-w-6xl h-[90vh] max-h-screen">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-4">
+              <div>
+                <h3 class="font-bold text-lg">PDF Förhandsvisning</h3>
+                <p class="text-sm text-base-content/70" id="pdfInfo">PDF skapad</p>
+              </div>
+              <button class="btn btn-sm btn-circle btn-ghost" onclick="closePdfPreview()">✕</button>
             </div>
 
-            <div>
-              <label class="label">
-                <span class="label-text">Välj bilder</span>
-              </label>
-              <input type="file" name="images" id="images" multiple class="file-input file-input-bordered w-full" accept="image/*" />
+            <!-- PDF Viewer -->
+            <div class="bg-base-200 rounded-lg h-[60vh] mb-4 relative overflow-hidden">
+              <embed id="pdfEmbed" type="application/pdf" class="w-full h-full rounded-lg" style="display: none;">
+              <div id="pdfFallback" class="flex items-center justify-center h-full text-center p-8" style="display: none;">
+                <div>
+                  <div class="text-6xl mb-4">📄</div>
+                  <h4 class="text-lg font-semibold text-base-content mb-2">PDF Förhandsvisning</h4>
+                  <p class="text-base-content/70 mb-3">PDF kan inte visas direkt i iOS Safari</p>
+                  <p class="text-sm text-base-content/50 mb-4">PDF är redo - använd dela- eller ladda ner-knappen nedan</p>
+                  <div class="text-sm text-base-content/60 bg-base-100 rounded-lg p-3">
+                    <div class="font-medium" id="fallbackPdfInfo">PDF information</div>
+                  </div>
+                </div>
+              </div>
+              <div id="pdfLoading" class="flex items-center justify-center h-full">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+              </div>
             </div>
 
-            <div class="flex items-center justify-start">
-              <button type="submit" class="btn btn-primary">Skapa PDF</button>
+            <!-- Action Buttons -->
+            <div class="flex gap-2 flex-wrap">
+              <button class="btn btn-primary flex-1" id="sharePdfBtn" onclick="sharePdf()">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                </svg>
+                Dela PDF
+              </button>
+              <button class="btn btn-outline flex-1" id="downloadPdfBtn" onclick="downloadPdf()">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Ladda ner
+              </button>
+              <button class="btn btn-ghost" onclick="createNewPdf()">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Skapa ny
+              </button>
             </div>
-
-          </form>
+          </div>
+          <div class="modal-backdrop" onclick="closePdfPreview()"></div>
         </div>
-      </div>
-
-      <!-- Small info/tips under the card -->
-      <p class="mt-6 text-center text-sm text-muted">Tips: Högre värde ger större rutor, men färre på sidan. PDF genereras i 300 DPI.</p>
-
+      </main>
     </div>
 
     <script>
+      // iOS Debug logging system
+      const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+      const debugLogs = [];
+      
+      function debugLog(message, data = null) {
+        const timestamp = new Date().toISOString();
+        const logEntry = { timestamp, message, data, userAgent: navigator.userAgent };
+        debugLogs.push(logEntry);
+        console.log(`[DEBUG ${timestamp}] ${message}`, data || '');
+        
+        // On iOS, also show critical errors in alerts for debugging
+        if (isIOS && (message.includes('ERROR') || message.includes('FAIL'))) {
+          setTimeout(() => alert(`iOS Debug: ${message}`), 100);
+        }
+      }
+      
+      // Global error handlers for iOS debugging
+      window.addEventListener('error', (e) => {
+        debugLog('ERROR: JavaScript error', {
+          message: e.message,
+          filename: e.filename,
+          lineno: e.lineno,
+          colno: e.colno,
+          error: e.error?.toString()
+        });
+      });
+      
+      window.addEventListener('unhandledrejection', (e) => {
+        debugLog('ERROR: Unhandled promise rejection', {
+          reason: e.reason?.toString(),
+          promise: e.promise
+        });
+      });
+
+      debugLog('App initialized', { isIOS, userAgent: navigator.userAgent });
+
       // Apply system theme only (no UI toggle). Uses prefers-color-scheme and keeps in sync.
       function applyTheme(isDark) {
         document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -76,26 +209,509 @@
 
       // Upload form
       const form = document.getElementById('uploadForm');
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const data = new FormData(form);
-        const res = await fetch('/upload', { method: 'POST', body: data });
-        if (!res.ok) {
-          alert('Upload failed');
+      const sizeInput = document.getElementById('size');
+      const fileInput = document.getElementById('fileInput');
+      const imageCount = document.getElementById('imageCount');
+      const createBtn = document.getElementById('createBtn');
+      const steps = document.querySelectorAll('.step');
+
+      let selectedFiles = [];
+      let objectUrls = [];
+      let pdfCreationStarted = false;
+      let currentPdfBlob = null;
+      let currentPdfData = null;
+
+      function updateSteps() {
+        steps.forEach((step, index) => {
+          step.className = 'step';
+          if (index === 0 && parseFloat(sizeInput.value) > 0) step.classList.add('step-primary');
+          if (index === 1 && selectedFiles.length > 0) step.classList.add('step-primary');
+          if (index === 2 && pdfCreationStarted) step.classList.add('step-primary');
+        });
+      }
+
+      // Preset size buttons (both desktop and mobile)
+      const presetButtons = document.querySelectorAll('.preset-btn');
+      
+      function updatePresetButtonStates() {
+        const currentSize = parseFloat(sizeInput.value);
+        presetButtons.forEach(btn => {
+          const btnSize = parseFloat(btn.dataset.size);
+          if (Math.abs(currentSize - btnSize) < 0.01) {
+            // Mark as active - use primary styling
+            btn.classList.remove('btn-outline');
+            btn.classList.add('btn-primary');
+          } else {
+            // Mark as inactive - use outline styling
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline');
+          }
+        });
+      }
+      
+      presetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const newSize = btn.dataset.size;
+          sizeInput.value = newSize;
+          updatePresetButtonStates();
+          updateSteps();
+          
+          // Add subtle feedback animation
+          btn.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            btn.style.transform = '';
+          }, 100);
+        });
+      });
+      
+      // Update button states when input changes manually
+      sizeInput.addEventListener('input', () => {
+        updatePresetButtonStates();
+        updateSteps();
+      });
+      
+      // Initialize button states
+      updatePresetButtonStates();
+
+      // File input + DnD
+      fileInput.addEventListener('change', handleFiles);
+      
+      // iOS Safari often has issues with drag and drop, so add extra safety
+      const dropzone = fileInput.parentElement.parentElement; // Assuming label is parent, then div is parent
+      
+      if (!isIOS) {
+        // Only enable drag and drop on non-iOS devices as iOS Safari has limited support
+        dropzone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropzone.classList.add('bg-base-200/60'); // Add a visual cue for drag
+        });
+        dropzone.addEventListener('dragleave', () => {
+          dropzone.classList.remove('bg-base-200/60');
+        });
+        dropzone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('bg-base-200/60');
+          const files = Array.from(e.dataTransfer.files);
+          handleNewFiles(files);
+        });
+        debugLog('Drag and drop enabled (non-iOS)');
+      } else {
+        debugLog('Drag and drop disabled on iOS');
+      }
+
+      function handleFiles(e) {
+        debugLog('File input change event triggered', {
+          filesLength: e.target.files?.length,
+          isIOS
+        });
+        
+        // iOS Safari can sometimes have issues with FileList, so add extra checks
+        const files = [];
+        if (e.target.files) {
+          for (let i = 0; i < e.target.files.length; i++) {
+            const file = e.target.files[i];
+            if (file) {
+              files.push(file);
+            }
+          }
+        }
+        
+        debugLog('Files extracted from input', { extractedCount: files.length });
+        handleNewFiles(files);
+      }
+
+      function handleNewFiles(files) {
+        try {
+          debugLog('handleNewFiles called', {
+            filesCount: files.length,
+            fileTypes: files.map(f => f.type),
+            fileSizes: files.map(f => f.size),
+            fileNames: files.map(f => f.name)
+          });
+          
+          const imageFiles = files.filter(f => f.type.startsWith('image/'));
+          debugLog('Filtered image files', {
+            originalCount: files.length,
+            imageCount: imageFiles.length,
+            rejectedFiles: files.filter(f => !f.type.startsWith('image/')).map(f => ({ name: f.name, type: f.type }))
+          });
+          
+          selectedFiles = [...selectedFiles, ...imageFiles];
+          createBtn.disabled = selectedFiles.length === 0;
+          renderThumbnails();
+          updateSteps();
+          
+          debugLog('Files added successfully', { totalSelected: selectedFiles.length });
+        } catch (err) {
+          debugLog('ERROR: File handling failed', { error: err.message, stack: err.stack });
+          console.error('File handling error:', err);
+          alert('Kunde inte lägga till filerna: ' + err.message);
+        }
+      }
+
+      function renderThumbnails() {
+        // Städa gamla objectURLs
+        objectUrls.forEach(u => { try { URL.revokeObjectURL(u); } catch {} });
+        objectUrls = [];
+
+        imageCount.textContent = `${selectedFiles.length} bilder valda`;
+        createBtn.disabled = selectedFiles.length === 0;
+      }
+
+      function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        renderThumbnails();
+        updateSteps();
+      }
+
+      updateSteps();
+
+      // Hjälpfunktion för busy state
+      async function withBusy(btn, fn) {
+        const oldHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Skapar...';
+        try {
+          return await fn();
+        } finally {
+          btn.innerHTML = oldHTML;
+          btn.disabled = selectedFiles.length === 0;
+        }
+      }
+
+      // Nedladdning med iOS-fallback
+      function saveBlob(blob, filename) {
+        debugLog('saveBlob called', { blobSize: blob.size, blobType: blob.type, filename, isIOS });
+        
+        try {
+          const url = URL.createObjectURL(blob);
+          debugLog('Object URL created', { url: url.substring(0, 50) + '...' });
+          
+          if (isIOS) {
+            debugLog('Using iOS fallback - opening in new tab');
+            // Öppna i ny flik
+            const newWindow = window.open(url, '_blank');
+            if (!newWindow) {
+              debugLog('ERROR: Failed to open new window - popup blocked?');
+              alert('Popup blockerad? PDF skapad men kunde inte öppnas automatiskt.');
+            } else {
+              debugLog('New window opened successfully');
+            }
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+              debugLog('Object URL revoked after timeout');
+            }, 10_000);
+            return;
+          }
+          
+          debugLog('Using standard download method');
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          debugLog('Standard download completed');
+        } catch (err) {
+          debugLog('ERROR: saveBlob failed', { error: err.message, stack: err.stack });
+          alert('Kunde inte spara PDF: ' + err.message);
+        }
+      }
+
+      // PDF Preview Functions
+      function showPdfPreview(pdfData) {
+        debugLog('Showing PDF preview', { size: pdfData.size, filename: pdfData.filename });
+        
+        try {
+          // Convert base64 to blob
+          const binaryString = atob(pdfData.pdf_data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          currentPdfBlob = new Blob([bytes], { type: 'application/pdf' });
+          currentPdfData = pdfData;
+          
+          debugLog('PDF blob created', { blobSize: currentPdfBlob.size });
+          
+          // Update modal info
+          const pdfInfo = document.getElementById('pdfInfo');
+          pdfInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+          
+          // Try to show PDF in embed
+          const pdfEmbed = document.getElementById('pdfEmbed');
+          const pdfFallback = document.getElementById('pdfFallback');
+          const pdfLoading = document.getElementById('pdfLoading');
+          
+          pdfLoading.style.display = 'flex';
+          pdfEmbed.style.display = 'none';
+          pdfFallback.style.display = 'none';
+          
+          const pdfUrl = URL.createObjectURL(currentPdfBlob);
+          debugLog('PDF URL created', { url: pdfUrl.substring(0, 50) + '...' });
+          
+          // Detect browsers with poor PDF embed support
+          const isEdge = /Edg/i.test(navigator.userAgent);
+          const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+          const hasEmbedIssues = isIOS || isEdge || isSafari;
+          
+          debugLog('Browser detection', { isIOS, isEdge, isSafari, hasEmbedIssues });
+          
+          if (hasEmbedIssues) {
+            debugLog('Browser with PDF embed issues detected - using fallback');
+            pdfLoading.style.display = 'none';
+            pdfFallback.style.display = 'flex';
+            
+            // Update fallback with PDF info and browser-specific message
+            const fallbackInfo = document.getElementById('fallbackPdfInfo');
+            fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+            
+            // Update fallback message based on browser
+            const fallbackMessage = pdfFallback.querySelector('p');
+            if (isIOS) {
+              fallbackMessage.textContent = 'PDF kan inte visas direkt i iOS Safari';
+            } else if (isEdge) {
+              fallbackMessage.textContent = 'PDF kan inte visas direkt i Edge';
+            } else if (isSafari) {
+              fallbackMessage.textContent = 'PDF kan inte visas direkt i Safari';
+            } else {
+              fallbackMessage.textContent = 'PDF kan inte visas i denna webbläsare';
+            }
+          } else {
+            // Try to display PDF in browsers that might support it (Chrome, Firefox)
+            debugLog('Attempting PDF embed in supported browser');
+            pdfEmbed.src = pdfUrl;
+            
+            // Set a shorter timeout for embed loading
+            const embedTimeout = setTimeout(() => {
+              debugLog('PDF embed timeout - showing fallback');
+              pdfLoading.style.display = 'none';
+              pdfFallback.style.display = 'flex';
+              
+              const fallbackInfo = document.getElementById('fallbackPdfInfo');
+              fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+              
+              const fallbackMessage = pdfFallback.querySelector('p');
+              fallbackMessage.textContent = 'PDF kan inte visas i denna webbläsare';
+            }, 2000);
+            
+            // Success handler
+            pdfEmbed.onload = () => {
+              debugLog('PDF embed loaded successfully');
+              clearTimeout(embedTimeout);
+              pdfLoading.style.display = 'none';
+              pdfEmbed.style.display = 'block';
+            };
+            
+            // Error handler
+            pdfEmbed.onerror = () => {
+              debugLog('PDF embed failed, showing fallback');
+              clearTimeout(embedTimeout);
+              pdfLoading.style.display = 'none';
+              pdfFallback.style.display = 'flex';
+              
+              const fallbackInfo = document.getElementById('fallbackPdfInfo');
+              fallbackInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+              
+              const fallbackMessage = pdfFallback.querySelector('p');
+              fallbackMessage.textContent = 'PDF kan inte visas i denna webbläsare';
+            };
+          }
+          
+          // Show modal
+          const modal = document.getElementById('pdfPreviewModal');
+          modal.classList.add('modal-open');
+          
+          // Update share button visibility based on Web Share API support
+          const shareBtn = document.getElementById('sharePdfBtn');
+          if (navigator.share && isIOS) {
+            shareBtn.style.display = 'flex';
+            debugLog('Web Share API available');
+          } else {
+            shareBtn.style.display = 'none';
+            debugLog('Web Share API not available');
+          }
+          
+        } catch (err) {
+          debugLog('ERROR: Failed to show PDF preview', { error: err.message, stack: err.stack });
+          alert('Kunde inte visa PDF-förhandsvisning: ' + err.message);
+        }
+      }
+      
+      function closePdfPreview() {
+        debugLog('Closing PDF preview');
+        const modal = document.getElementById('pdfPreviewModal');
+        modal.classList.remove('modal-open');
+        
+        // Clean up
+        const pdfEmbed = document.getElementById('pdfEmbed');
+        if (pdfEmbed.src) {
+          URL.revokeObjectURL(pdfEmbed.src);
+          pdfEmbed.src = '';
+        }
+      }
+      
+      async function sharePdf() {
+        if (!currentPdfBlob || !navigator.share) {
+          debugLog('ERROR: Cannot share - no PDF blob or Web Share API not available');
+          alert('Delning stöds inte i denna webbläsare');
           return;
         }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'bilder.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        
+        try {
+          debugLog('Attempting to share PDF via Web Share API');
+          const file = new File([currentPdfBlob], currentPdfData.filename, {
+            type: 'application/pdf'
+          });
+          
+          await navigator.share({
+            title: 'Gridprint PDF',
+            text: `PDF med ${currentPdfData.image_count} bilder`,
+            files: [file]
+          });
+          
+          debugLog('PDF shared successfully');
+        } catch (err) {
+          debugLog('ERROR: Share failed', { error: err.message });
+          if (err.name !== 'AbortError') {
+            alert('Kunde inte dela PDF: ' + err.message);
+          }
+        }
+      }
+      
+      function downloadPdf() {
+        if (!currentPdfBlob) {
+          debugLog('ERROR: No PDF blob available for download');
+          alert('Ingen PDF tillgänglig för nedladdning');
+          return;
+        }
+        
+        debugLog('Downloading PDF');
+        saveBlob(currentPdfBlob, currentPdfData.filename);
+      }
+      
+      function createNewPdf() {
+        debugLog('Creating new PDF');
+        closePdfPreview();
+        
+        // Reset form
+        selectedFiles = [];
+        pdfCreationStarted = false;
+        renderThumbnails();
+        updateSteps();
+        createBtn.disabled = true;
+        
+        // Reset file input
+        fileInput.value = '';
+      }
+
+      // Submit
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        debugLog('Form submitted', { selectedFilesCount: selectedFiles.length });
+        
+        if (selectedFiles.length === 0) {
+          debugLog('ERROR: No files selected');
+          alert('Välj bilder först');
+          return;
+        }
+        const sizeVal = Math.max(0.1, parseFloat(sizeInput.value) || 5.5);
+        debugLog('Starting PDF creation', { sizeVal, filesCount: selectedFiles.length });
+
+        withBusy(createBtn, async () => {
+          try {
+            // Aktivera steg 3 när PDF-skapandet startar
+            pdfCreationStarted = true;
+            updateSteps();
+            
+            // Bygg FormData direkt från selectedFiles
+            debugLog('Building FormData');
+            const data = new FormData();
+            data.append('size', String(sizeVal));
+            data.append('preview', 'true'); // Enable preview mode
+            
+            selectedFiles.forEach((file, index) => {
+              debugLog(`Adding file ${index}`, { name: file.name, type: file.type, size: file.size });
+              data.append('images', file, file.name);
+            });
+            
+            debugLog('FormData built, sending request to /upload with preview mode');
+
+            let res;
+            try {
+              res = await fetch('/upload', {
+                method: 'POST',
+                body: data
+              });
+              debugLog('Fetch completed', {
+                status: res.status,
+                statusText: res.statusText,
+                headers: Object.fromEntries(res.headers.entries())
+              });
+            } catch (networkErr) {
+              debugLog('ERROR: Network fetch failed', { error: networkErr.message, stack: networkErr.stack });
+              console.error('Fetch error:', networkErr);
+              alert('Nätverksfel: ' + networkErr.message);
+              return;
+            }
+
+            // Om servern svarar med HTML/text, visa fel
+            const contentType = res.headers.get('Content-Type') || '';
+            debugLog('Response details', {
+              ok: res.ok,
+              status: res.status,
+              contentType,
+              contentLength: res.headers.get('Content-Length')
+            });
+            
+            if (!res.ok) {
+              const text = await res.text();
+              debugLog('ERROR: Server error response', { status: res.status, text: text.slice(0, 500) });
+              console.error('Upload failed:', res.status, text);
+              alert(`Fel ${res.status}: ${text}`);
+              return;
+            }
+            
+            // Preview mode expects JSON response
+            if (!contentType.includes('application/json')) {
+              const text = await res.text();
+              debugLog('ERROR: Expected JSON response for preview mode', { contentType, responseText: text.slice(0, 500) });
+              alert('Oväntat svar från servern: ' + text.slice(0, 200));
+              return;
+            }
+
+            debugLog('Parsing JSON response');
+            const jsonData = await res.json();
+            debugLog('JSON response received', {
+              success: jsonData.success,
+              filename: jsonData.filename,
+              size: jsonData.size,
+              imageCount: jsonData.image_count
+            });
+            
+            if (!jsonData.success || !jsonData.pdf_data) {
+              debugLog('ERROR: Invalid response data');
+              alert('Kunde inte skapa PDF: Ogiltigt svar från servern');
+              return;
+            }
+
+            debugLog('Showing PDF preview');
+            showPdfPreview(jsonData);
+            debugLog('PDF preview shown successfully');
+
+            // Keep form state - don't reset until user creates new PDF
+            pdfCreationStarted = false; // Reset creation state but keep files
+            updateSteps();
+            
+          } catch (err) {
+            debugLog('ERROR: Unexpected error in form submit', { error: err.message, stack: err.stack });
+            throw err; // Re-throw to be caught by withBusy
+          }
+        });
       });
 
-      // Register service worker for PWA (if supported)
+      // Registrera SW om den finns (se till att /sw.js inte cache:ar /upload)
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
