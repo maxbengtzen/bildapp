@@ -78,6 +78,58 @@
             </div>
           </div>
         </form>
+
+        <!-- PDF Preview Modal -->
+        <div id="pdfPreviewModal" class="modal">
+          <div class="modal-box w-11/12 max-w-5xl h-5/6 max-h-screen">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center mb-4">
+              <div>
+                <h3 class="font-bold text-lg">PDF Förhandsvisning</h3>
+                <p class="text-sm text-base-content/70" id="pdfInfo">PDF skapad</p>
+              </div>
+              <button class="btn btn-sm btn-circle btn-ghost" onclick="closePdfPreview()">✕</button>
+            </div>
+
+            <!-- PDF Viewer -->
+            <div class="bg-base-200 rounded-lg h-4/5 mb-4 relative overflow-hidden">
+              <embed id="pdfEmbed" type="application/pdf" class="w-full h-full rounded-lg" style="display: none;">
+              <div id="pdfFallback" class="flex items-center justify-center h-full text-center" style="display: none;">
+                <div>
+                  <div class="text-4xl mb-2">📄</div>
+                  <p class="text-base-content/70">PDF kan inte visas i denna webbläsare</p>
+                  <p class="text-sm text-base-content/50">Använd dela- eller ladda ner-knappen nedan</p>
+                </div>
+              </div>
+              <div id="pdfLoading" class="flex items-center justify-center h-full">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2 flex-wrap">
+              <button class="btn btn-primary flex-1" id="sharePdfBtn" onclick="sharePdf()">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                </svg>
+                Dela PDF
+              </button>
+              <button class="btn btn-outline flex-1" id="downloadPdfBtn" onclick="downloadPdf()">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Ladda ner
+              </button>
+              <button class="btn btn-ghost" onclick="createNewPdf()">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Skapa ny
+              </button>
+            </div>
+          </div>
+          <div class="modal-backdrop" onclick="closePdfPreview()"></div>
+        </div>
       </main>
     </div>
 
@@ -143,6 +195,8 @@
       let selectedFiles = [];
       let objectUrls = [];
       let pdfCreationStarted = false;
+      let currentPdfBlob = null;
+      let currentPdfData = null;
 
       function updateSteps() {
         steps.forEach((step, index) => {
@@ -309,6 +363,141 @@
         }
       }
 
+      // PDF Preview Functions
+      function showPdfPreview(pdfData) {
+        debugLog('Showing PDF preview', { size: pdfData.size, filename: pdfData.filename });
+        
+        try {
+          // Convert base64 to blob
+          const binaryString = atob(pdfData.pdf_data);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          currentPdfBlob = new Blob([bytes], { type: 'application/pdf' });
+          currentPdfData = pdfData;
+          
+          debugLog('PDF blob created', { blobSize: currentPdfBlob.size });
+          
+          // Update modal info
+          const pdfInfo = document.getElementById('pdfInfo');
+          pdfInfo.textContent = `${pdfData.image_count} bilder • ${pdfData.grid_info.cols}×${pdfData.grid_info.rows} rutnät • ${(pdfData.size / 1024).toFixed(1)} KB`;
+          
+          // Try to show PDF in embed
+          const pdfEmbed = document.getElementById('pdfEmbed');
+          const pdfFallback = document.getElementById('pdfFallback');
+          const pdfLoading = document.getElementById('pdfLoading');
+          
+          pdfLoading.style.display = 'flex';
+          pdfEmbed.style.display = 'none';
+          pdfFallback.style.display = 'none';
+          
+          const pdfUrl = URL.createObjectURL(currentPdfBlob);
+          debugLog('PDF URL created', { url: pdfUrl.substring(0, 50) + '...' });
+          
+          // Test if browser can display PDFs
+          pdfEmbed.src = pdfUrl;
+          
+          // Fallback for browsers that can't display PDFs inline
+          pdfEmbed.onload = () => {
+            debugLog('PDF embed loaded successfully');
+            pdfLoading.style.display = 'none';
+            pdfEmbed.style.display = 'block';
+          };
+          
+          pdfEmbed.onerror = () => {
+            debugLog('PDF embed failed, showing fallback');
+            pdfLoading.style.display = 'none';
+            pdfFallback.style.display = 'flex';
+          };
+          
+          // Show modal
+          const modal = document.getElementById('pdfPreviewModal');
+          modal.classList.add('modal-open');
+          
+          // Update share button visibility based on Web Share API support
+          const shareBtn = document.getElementById('sharePdfBtn');
+          if (navigator.share && isIOS) {
+            shareBtn.style.display = 'flex';
+            debugLog('Web Share API available');
+          } else {
+            shareBtn.style.display = 'none';
+            debugLog('Web Share API not available');
+          }
+          
+        } catch (err) {
+          debugLog('ERROR: Failed to show PDF preview', { error: err.message, stack: err.stack });
+          alert('Kunde inte visa PDF-förhandsvisning: ' + err.message);
+        }
+      }
+      
+      function closePdfPreview() {
+        debugLog('Closing PDF preview');
+        const modal = document.getElementById('pdfPreviewModal');
+        modal.classList.remove('modal-open');
+        
+        // Clean up
+        const pdfEmbed = document.getElementById('pdfEmbed');
+        if (pdfEmbed.src) {
+          URL.revokeObjectURL(pdfEmbed.src);
+          pdfEmbed.src = '';
+        }
+      }
+      
+      async function sharePdf() {
+        if (!currentPdfBlob || !navigator.share) {
+          debugLog('ERROR: Cannot share - no PDF blob or Web Share API not available');
+          alert('Delning stöds inte i denna webbläsare');
+          return;
+        }
+        
+        try {
+          debugLog('Attempting to share PDF via Web Share API');
+          const file = new File([currentPdfBlob], currentPdfData.filename, {
+            type: 'application/pdf'
+          });
+          
+          await navigator.share({
+            title: 'Gridprint PDF',
+            text: `PDF med ${currentPdfData.image_count} bilder`,
+            files: [file]
+          });
+          
+          debugLog('PDF shared successfully');
+        } catch (err) {
+          debugLog('ERROR: Share failed', { error: err.message });
+          if (err.name !== 'AbortError') {
+            alert('Kunde inte dela PDF: ' + err.message);
+          }
+        }
+      }
+      
+      function downloadPdf() {
+        if (!currentPdfBlob) {
+          debugLog('ERROR: No PDF blob available for download');
+          alert('Ingen PDF tillgänglig för nedladdning');
+          return;
+        }
+        
+        debugLog('Downloading PDF');
+        saveBlob(currentPdfBlob, currentPdfData.filename);
+      }
+      
+      function createNewPdf() {
+        debugLog('Creating new PDF');
+        closePdfPreview();
+        
+        // Reset form
+        selectedFiles = [];
+        pdfCreationStarted = false;
+        renderThumbnails();
+        updateSteps();
+        createBtn.disabled = true;
+        
+        // Reset file input
+        fileInput.value = '';
+      }
+
       // Submit
       form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -332,23 +521,20 @@
             debugLog('Building FormData');
             const data = new FormData();
             data.append('size', String(sizeVal));
+            data.append('preview', 'true'); // Enable preview mode
             
             selectedFiles.forEach((file, index) => {
               debugLog(`Adding file ${index}`, { name: file.name, type: file.type, size: file.size });
               data.append('images', file, file.name);
             });
             
-            debugLog('FormData built, sending request to /upload');
+            debugLog('FormData built, sending request to /upload with preview mode');
 
             let res;
             try {
               res = await fetch('/upload', {
                 method: 'POST',
-                body: data,
-                // Add explicit headers for iOS compatibility
-                headers: {
-                  // Don't set Content-Type - let browser set it with boundary
-                }
+                body: data
               });
               debugLog('Fetch completed', {
                 status: res.status,
@@ -379,35 +565,36 @@
               return;
             }
             
-            if (!contentType.includes('application/pdf')) {
-              // Kan hända vid felaktig SW-cache eller serverfel
+            // Preview mode expects JSON response
+            if (!contentType.includes('application/json')) {
               const text = await res.text();
-              debugLog('ERROR: Wrong content type', { contentType, responseText: text.slice(0, 500) });
-              console.warn('Ov. innehållstyp, förväntade PDF. Svar:', text.slice(0, 500));
-              alert('Servern returnerade inte en PDF. Kontrollera backend eller Service Worker.');
+              debugLog('ERROR: Expected JSON response for preview mode', { contentType, responseText: text.slice(0, 500) });
+              alert('Oväntat svar från servern: ' + text.slice(0, 200));
               return;
             }
 
-            debugLog('Converting response to blob');
-            const blob = await res.blob();
-            debugLog('Blob created', { size: blob.size, type: blob.type });
+            debugLog('Parsing JSON response');
+            const jsonData = await res.json();
+            debugLog('JSON response received', {
+              success: jsonData.success,
+              filename: jsonData.filename,
+              size: jsonData.size,
+              imageCount: jsonData.image_count
+            });
             
-            if (!blob || blob.size === 0) {
-              debugLog('ERROR: Empty blob received');
-              alert('Tom PDF mottagen.');
+            if (!jsonData.success || !jsonData.pdf_data) {
+              debugLog('ERROR: Invalid response data');
+              alert('Kunde inte skapa PDF: Ogiltigt svar från servern');
               return;
             }
 
-            debugLog('Saving blob as PDF');
-            saveBlob(blob, 'bilder.pdf');
-            debugLog('PDF save initiated successfully');
+            debugLog('Showing PDF preview');
+            showPdfPreview(jsonData);
+            debugLog('PDF preview shown successfully');
 
-            // Nollställ
-            selectedFiles = [];
-            pdfCreationStarted = false;
-            renderThumbnails();
+            // Keep form state - don't reset until user creates new PDF
+            pdfCreationStarted = false; // Reset creation state but keep files
             updateSteps();
-            createBtn.disabled = true; // Disable button after successful upload
             
           } catch (err) {
             debugLog('ERROR: Unexpected error in form submit', { error: err.message, stack: err.stack });

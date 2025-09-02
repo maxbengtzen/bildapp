@@ -5,6 +5,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
 import io
 import os
+import base64
 
 # Försök aktivera HEIF/HEIC-stöd i Pillow
 try:
@@ -92,6 +93,9 @@ def upload():
         size_cm = float(request.form.get("size", 5.5))
     except (TypeError, ValueError):
         size_cm = 5.5
+    
+    # Check if preview mode is requested
+    preview_mode = request.form.get("preview", "false").lower() == "true"
 
     # Konstanter
     DPI = 300               # rasterisering/skalning
@@ -170,12 +174,31 @@ def upload():
         c.save()
         buffer.seek(0)
 
-        return send_file(
-            buffer,
-            mimetype='application/pdf',
-            as_attachment=True,
-            download_name="bilder.pdf"
-        )
+        if preview_mode:
+            # Return PDF as base64-encoded JSON for preview mode
+            pdf_data = buffer.getvalue()
+            pdf_base64 = base64.b64encode(pdf_data).decode('utf-8')
+            
+            return jsonify({
+                'success': True,
+                'pdf_data': pdf_base64,
+                'filename': 'bilder.pdf',
+                'size': len(pdf_data),
+                'image_count': len(processed),
+                'grid_info': {
+                    'cols': cols,
+                    'rows': rows,
+                    'size_cm': size_cm
+                }
+            })
+        else:
+            # Traditional download mode
+            return send_file(
+                buffer,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name="bilder.pdf"
+            )
     except Exception as e:
         # Logga och returnera tydligt fel
         # (i produktion, logga med logger i stället för print)
