@@ -41,15 +41,15 @@
                   
                   <!-- Unified badge system for all devices -->
                   <div class="flex gap-2 flex-wrap justify-center mb-3">
-                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="3">3cm</button>
-                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="5">5cm</button>
-                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="7">7cm</button>
+                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="3">3 cm</button>
+                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="5">5 cm</button>
+                    <button type="button" class="badge badge-lg cursor-pointer preset-badge" data-size="7">7 cm</button>
                     <button type="button" class="badge badge-lg cursor-pointer manual-badge">Manuell</button>
                   </div>
                   
                   <!-- Number input (hidden by default, shown when manual is selected) -->
                   <label class="input input-bordered flex items-center gap-2 hidden" id="manualInput">
-                    <input id="size" name="size" class="grow" type="number" step="0.1" value="5.5" placeholder="5.5" aria-describedby="cellSizeHelp" />
+                    <input id="size" name="size" class="grow" type="number" step="0.1" value="3" placeholder="3" aria-describedby="cellSizeHelp" />
                     <span class="opacity-60">cm</span>
                   </label>
                 </div>
@@ -248,25 +248,25 @@
           const badgeSize = parseFloat(badge.dataset.size);
           if (Math.abs(currentSize - badgeSize) < 0.01 && !isManualMode) {
             // Active preset badge - use primary color
-            badge.classList.remove('badge-outline');
+            badge.classList.remove('bg-base-200', 'text-base-content/70');
             badge.classList.add('badge-primary');
             foundPreset = true;
           } else {
-            // Inactive preset badge - use outline style
+            // Inactive preset badge - use base background
             badge.classList.remove('badge-primary');
-            badge.classList.add('badge-outline');
+            badge.classList.add('bg-base-200', 'text-base-content/70');
           }
         });
         
         // Update manual badge
         if (isManualMode || !foundPreset) {
-          manualBadge.classList.remove('badge-outline');
+          manualBadge.classList.remove('bg-base-200', 'text-base-content/70');
           manualBadge.classList.add('badge-accent');
           isManualMode = true;
           manualInput.classList.remove('hidden');
         } else {
           manualBadge.classList.remove('badge-accent');
-          manualBadge.classList.add('badge-outline');
+          manualBadge.classList.add('bg-base-200', 'text-base-content/70');
           isManualMode = false;
           manualInput.classList.add('hidden');
         }
