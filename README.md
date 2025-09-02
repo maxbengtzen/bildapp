@@ -1,69 +1,98 @@
-# Bilder till A4-PDF
+# Gridprint
 
-En enkel webapp som tar flera uppladdade bilder, beskär dem till kvadrater och arrangerar dem i ett A4-PDF. Projektet innehåller en liten frontend (HTML/CSS) och en Python-backend.
+![Cover photo](/assets/cover.png)
 
-Innehåll
-- backend/: Flask-app som tar emot uppladdade bilder och genererar PDF
-- frontend/: statisk HTML/CSS (Tailwind + DaisyUI) för att ladda upp bilder och välja storlek
-- Dockerfile: bygger frontend med en Node-byggetrinn och packar sedan en Python-runtime
-- docker-compose.example.yml: exempel för hur du kan köra appen med Docker Compose
+En modern Progressive Web App (PWA) som tar flera uppladdade bilder, beskär dem till kvadrater och arrangerar dem i ett utskriftsvänligt A4-PDF. Appen är optimerad för mobila enheter med särskilt fokus på iOS Safari-kompatibilitet.
 
-Snabbstart (med Docker)
-1. Kopiera example-filen om du vill använda Docker Compose lokalt:
+## ✨ Funktioner
+
+- **🔲 PDF-generering**: Automatisk beskärning till kvadrater och smart layout på A4-format
+- **📱 PWA-funktionalitet**: Installeras som en riktig app, fungerar offline med service worker
+- **🍎 iOS-optimerad**: Inbyggt stöd för iOS Safari med PDF-förhandsvisning och native sharing
+- **🌓 Automatisk temakväxling**: Följer systemets mörkt/ljus läge-inställningar
+- **📸 Modernt bildstöd**: HEIC/HEIF-format (iPhone) samt traditionella PNG/JPG
+- **⚡ Responsiv design**: Fungerar perfekt på mobil, tablet och desktop
+- **🎨 Anpassad design**: Modern UI med Bricolage Grotesque-typsnitt och teal-färgschema
+
+## 🗂️ Projektstruktur
+
+- **backend/**: Flask-app som hanterar bildbehandling och PDF-generering
+- **frontend/**: Modern frontend med Tailwind CSS, DaisyUI och PWA-funktionalitet
+- **Dockerfile**: Multistage-build som bygger frontend och packar Python-runtime
+- **docker-compose.example.yml**: Exempel för deployment med Docker Compose
+
+## 🚀 Kom igång med Docker Compose
+
+1. Kopiera example-filen:
+   ```bash
    cp docker-compose.example.yml docker-compose.yml
-2. Bygg och starta (Docker bygger frontend i node-steget):
+   ```
+
+2. Bygg och starta:
+   ```bash
    docker-compose up --build
+   ```
+
 3. Öppna http://localhost:5000 i webbläsaren
 
-Köra utan Docker (lokal utveckling)
-1. Backend (Python):
-   python -m venv .venv
-   source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
-   pip install -r backend/requirements.txt
-   python backend/app.py
+## 💻 Utveckling
 
-2. Frontend (Tailwind CLI):
-   - Gå till frontend-katalogen och installera dev-deps:
-     cd frontend
-     npm install
+### Frontend-utveckling
 
-   - Bygg en produktionsfil (genererar output.css i frontend-katalogen):
-     npx @tailwindcss/cli -i ./src/input.css -o ./output.css --minify --content './**/*.html' './**/*.js'
+Appen använder Tailwind CSS med DaisyUI för styling:
 
-   - Alternativt använd npm-skript (om package.json innehåller dem):
-     npm run build:css      # bygg en gång
-     npm run dev:css        # kör med --watch under utveckling
+```bash
+cd frontend
+npm install
+npm run build:css  # Bygger output.css från input.css
+```
 
-   - index.html länkar till ./output.css (serverad av Flask från frontend-mappen när du kör Docker eller kopierar filen vid lokal körning), så se till att output.css ligger i frontend-root.
+### Bildformat som stöds
 
-Om du inte ser några Tailwind-stilar i webbläsaren (t.ex. output.css är tom eller 0 bytes)
-- Kontrollera att input-filen innehåller Tailwinds direktiv högst upp:
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
+- **JPEG/JPG**: Standard-format
+- **PNG**: Med transparens-stöd
+- **HEIC/HEIF**: Moderna format från iPhone/iPad
+- **Automatisk orientering**: Respekterar EXIF-data
 
-- Kontrollera content-globs så Tailwind hittar dina klassnamn (passa --content eller tailwind.config.js)
-- Bygg i en temporär Node-container för felsökning (om du inte vill installera Node lokalt):
-  docker run --rm -v "$(pwd)/frontend:/work" -w /work node:18-alpine \
-    sh -c "npm install --silent && npx @tailwindcss/cli -i ./src/input.css -o ./output.css --minify --content './**/*.html' './**/*.js' && ls -la output.css && head -n 20 output.css"
+## 📱 PWA-installation
 
-Docker och var assets hamnar
-- Dockerfile använder en multi-stage build: först node:18-alpine (nodebuilder) där frontend byggs, sedan kopieras hela frontend-mappen till slutbilden under /frontend.
-- Flask-backenden (backend/app.py) är konfigurerad att serva statiska filer från ../frontend relativt backend-katalogen. När bilden körs i /app (i Docker) motsvarar ../frontend → /frontend.
-- Därför måste den byggda CSS-filen ligga i frontend-root (t.ex. /frontend/output.css i containern) så att index.html kan referera till /output.css.
+### iOS (Safari)
+1. Öppna appen i Safari
+2. Tryck på dela-knappen
+3. Välj "Lägg till på startskärmen"
 
-Felsökning i Docker
-- Bygg med plain logs och leta efter npm/tailwind-fel:
-  docker-compose build --progress=plain
-- Lista byggda filer i runtime-container:
-  docker-compose run --rm bildapp sh -c "ls -la /frontend || true; wc -c /frontend/output.css || true"
+### Android (Chrome)
+1. Öppna appen i Chrome
+2. Tryck på menyn (tre prickar)
+3. Välj "Installera appen"
 
-Git och distribution
-- Det finns en .gitignore som exkluderar lokala miljöfiler och docker-compose.yml så att du kan ha en lokal compose-fil utan att lägga upp den.
+### Desktop
+1. Öppna appen i Chrome/Edge
+2. Klicka på installations-ikonen i adressfältet
+3. Följ installationsguiden
 
-Att tänka på inför publicering
-- Ta bort eller se över eventuella hårdkodade hemligheter. Använd .env-filer eller hemliga hanterare för produktionsinställningar.
-- Lägg gärna till licensfil (t.ex. MIT) om du vill att andra ska få använda koden.
+## 🌐 Webbläsarkompatibilitet
 
-Kontakt
-Detta är ett litet exempelprojekt — lägg till issue/PR om du vill bidra eller har frågor.
+- **✅ Chrome/Chromium**: Full funktionalitet
+- **✅ Firefox**: Full funktionalitet
+- **✅ Safari (macOS)**: PDF-förhandsvisning med fallback
+- **✅ iOS Safari**: Optimerad upplevelse med native sharing
+- **✅ Edge**: Fungerar med PDF-fallback
+
+## 🔧 API-endpoints
+
+- `POST /upload`: Ladda upp bilder och generera PDF
+- `POST /debug`: Debug-endpoint för felsökning
+- `GET /health`: Hälsokontroll och funktionalitetsstatus
+
+## 🎯 PWA-funktioner
+
+- **Offline-läge**: Caching av statiska resurser
+- **Installbar**: Lägg till på startskärmen
+- **Push-notifikationer**: Redo för framtida implementation
+- **Service Worker**: Intelligent cache-hantering
+- **Native-känsla**: Fullskärmläge utan webbläsarfält
+
+## 📞 Kontakt
+
+Detta projekt har utvecklats från en enkel webapp till en fullfjädrad PWA. Bidrag välkomnas via issues och pull requests!
