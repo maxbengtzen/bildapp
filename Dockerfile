@@ -2,6 +2,13 @@
 FROM node:22.19.0 AS web-builder
 WORKDIR /app
 
+# Install build dependencies for native modules
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy root package.json for workspace setup
 COPY package*.json ./
 RUN npm install
@@ -14,6 +21,7 @@ COPY web/ ./web/
 RUN cd web && echo "=== BUILDING WITH VITE ===" && \
     echo "Node version: $(node --version)" && \
     echo "NPM version: $(npm --version)" && \
+    npm cache clean --force && \
     npm install && \
     npm run build
 
