@@ -7,6 +7,7 @@
     "pdfjs-dist": "^5.4.149",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-icons": "^5.5.0",
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {
@@ -44,10 +45,10 @@
     ]
   },
   "optionalDependencies": {
-    "lightningcss-linux-x64-gnu": "^1.30.1",
-    "lightningcss-linux-arm64-gnu": "^1.30.1",
-    "lightningcss-darwin-x64": "^1.30.1",
     "lightningcss-darwin-arm64": "^1.30.1",
+    "lightningcss-darwin-x64": "^1.30.1",
+    "lightningcss-linux-arm64-gnu": "^1.30.1",
+    "lightningcss-linux-x64-gnu": "^1.30.1",
     "lightningcss-win32-x64-msvc": "^1.30.1"
   },
   "proxy": "http://localhost:5000"
