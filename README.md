@@ -15,25 +15,24 @@ En modern Progressive Web App (PWA) byggd med React och Flask som tar flera uppl
 - **🎨 Anpassad design**: Modern UI med Bricolage Grotesque-typsnitt och teal-färgschema
 - **⚛️ React-baserad**: Modern komponentarkitektur med hooks och state management
 
-## 🗂️ Projektstruktur (Monorepo)
+## 🗂️ Projektstruktur
 
 ```
 gridprint/
-├── packages/
-│   ├── web/          # React frontend application
-│   │   ├── src/
-│   │   │   ├── components/    # React components
-│   │   │   ├── hooks/         # Custom React hooks
-│   │   │   └── utils/         # Utility functions
-│   │   ├── public/            # Static assets and PWA files
-│   │   └── package.json       # Frontend dependencies
-│   ├── api/          # Flask backend application
-│   │   ├── app.py             # Main Flask application
-│   │   └── requirements.txt   # Python dependencies
-│   └── shared/       # Shared assets (fonts, icons, manifest)
-├── package.json      # Root workspace configuration
+├── web/              # React frontend application
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── hooks/         # Custom React hooks
+│   │   └── styles.css     # daisyUI + Tailwind CSS 4 config
+│   ├── public/            # Static assets and PWA files
+│   └── package.json       # Frontend dependencies
+├── api/              # Flask backend application
+│   ├── app.py             # Main Flask application
+│   └── requirements.txt   # Python dependencies
+├── assets/           # Shared assets (fonts, icons, cover)
+├── package.json      # Root project configuration
 ├── Dockerfile        # Multi-stage Docker build
-└── docker-compose.yml # Container orchestration
+└── docker-compose.example.yml # Container orchestration template
 ```
 
 ## 🚀 Kom igång

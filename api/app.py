@@ -1,4 +1,5 @@
 from flask import Flask, request, send_file, send_from_directory, jsonify
+from flask_cors import CORS
 from PIL import Image, ImageOps
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
@@ -16,11 +17,15 @@ except Exception:
     HEIF_ENABLED = False
 
 # Justera paths enligt din struktur:
-# Om din frontend ligger i ../frontend från backend-mappen:
-STATIC_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__), '../frontend'))
+# Use environment variable for Docker deployment, fallback to relative path for development
+STATIC_FOLDER = os.environ.get('STATIC_FOLDER', os.path.abspath(os.path.join(os.path.dirname(__file__), '../web/build')))
 
 app = Flask(__name__, static_folder=STATIC_FOLDER, static_url_path='')
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1 GB
+
+# Enable CORS for development mode
+if os.environ.get('FLASK_ENV') == 'development' or app.debug:
+    CORS(app, origins=['http://localhost:3000'])
 
 @app.errorhandler(413)
 def too_large(e):
