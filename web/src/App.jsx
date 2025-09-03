@@ -4,6 +4,7 @@ import useFormState from './hooks/useFormState';
 import Header from './components/Header';
 import UploadForm from './components/UploadForm';
 import PDFPreviewModal from './components/PDFPreviewModal';
+import Footer from './components/Footer';
 
 function App() {
   const { isIOS, debugLog, saveBlob } = useIOSCompatibility();
@@ -56,6 +57,8 @@ function App() {
           />
         )}
       </main>
+      
+      <Footer />
     </div>
   );
 }
