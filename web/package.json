@@ -4,16 +4,17 @@
   "private": true,
   "dependencies": {
     "@fontsource/bricolage-grotesque": "^5.2.8",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "pdfjs-dist": "^5.4.149",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-scripts": "5.0.1",
-    "web-vitals": "^3.3.2"
+    "web-vitals": "^5.1.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "@tailwindcss/cli": "4.1.12",
+    "concurrently": "^9.2.1",
     "daisyui": "^5.1.6",
-    "tailwindcss": "^4.1.12",
-    "@tailwindcss/cli": "4.1.12"
+    "tailwindcss": "^4.1.12"
   },
   "scripts": {
     "start": "concurrently \"npm run watch:css\" \"react-scripts start\" --names \"CSS,REACT\" --prefix-colors \"cyan,blue\"",

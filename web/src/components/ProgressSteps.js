@@ -9,10 +9,11 @@ const ProgressSteps = ({ stepStatus }) => {
 
   return (
     <ul className="steps w-full mb-2">
-      {steps.map((step) => (
-        <li 
+      {steps.map((step, index) => (
+        <li
           key={step.key}
           className={`step ${stepStatus[step.key] ? 'step-primary' : ''}`}
+          data-content={index + 1}
         >
           {step.label}
         </li>

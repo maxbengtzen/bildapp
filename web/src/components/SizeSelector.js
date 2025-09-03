@@ -43,19 +43,19 @@ const SizeSelector = ({
 
   const getBadgeClasses = (presetSize) => {
     const isActive = Math.abs(size - presetSize) < 0.01 && !isManualMode;
-    return `badge badge-lg cursor-pointer preset-badge ${
-      isActive 
-        ? 'badge-primary' 
-        : 'bg-base-200 text-base-content/70'
+    return `badge badge-lg cursor-pointer preset-badge w-full ${
+      isActive
+        ? 'badge-primary'
+        : 'bg-base-300 text-base-content/70'
     }`;
   };
 
   const getManualBadgeClasses = () => {
     const isActive = isManualMode || !presetSizes.some(preset => Math.abs(size - preset) < 0.01);
-    return `badge badge-lg cursor-pointer manual-badge ${
-      isActive 
-        ? 'badge-accent' 
-        : 'bg-base-200 text-base-content/70'
+    return `badge badge-lg cursor-pointer manual-badge w-full ${
+      isActive
+        ? 'badge-primary'
+        : 'bg-base-300 text-base-content/70'
     }`;
   };
 
@@ -66,7 +66,7 @@ const SizeSelector = ({
       </div>
       
       {/* Unified badge system for all devices */}
-      <div className="flex gap-2 flex-wrap justify-center mb-3">
+      <div className="grid grid-cols-4 gap-2 mb-3">
         {presetSizes.map((presetSize) => (
           <button
             key={presetSize}
@@ -88,10 +88,10 @@ const SizeSelector = ({
       </div>
       
       {/* Number input (hidden by default, shown when manual is selected) */}
-      <label 
+      <label
         className={`input input-bordered flex items-center gap-2 ${
-          isManualMode ? '' : 'hidden'
-        }`} 
+          isManualMode || !presetSizes.some(preset => Math.abs(size - preset) < 0.01) ? '' : 'hidden'
+        }`}
         id="manualInput"
       >
         <input

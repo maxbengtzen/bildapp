@@ -182,15 +182,63 @@ def upload():
         c = canvas.Canvas(buffer, pagesize=A4)
         page_w, page_h = A4  # i pt (1/72")
 
-        # Hur många får plats på bredd/höjd? Use frame size for grid calculation
-        cols = max(1, int(page_w // frame_width_pt))
-        rows = max(1, int(page_h // frame_height_pt))
-
-        # Jämn fördelning av mellanrum (gap) runt och mellan
-        gap_x = (page_w - cols * frame_width_pt) / (cols + 1)
-        gap_y = (page_h - rows * frame_height_pt) / (rows + 1)
+        # Reserve minimum margins (1cm = ~28.35pt) on all sides
+        MIN_MARGIN_CM = 1.0
+        min_margin_pt = MIN_MARGIN_CM / CM_PER_INCH * PT_PER_INCH
         
-        print(f"Grid calculation: {cols}x{rows} (frame: {frame_width_pt:.1f}x{frame_height_pt:.1f}pt)")
+        # For Polaroid layout, be extra conservative due to larger frames
+        if layout == "polaroid":
+            # Add extra safety margin for Polaroid frames
+            safety_margin_pt = min_margin_pt * 0.5  # Additional 0.5cm safety
+            available_width = page_w - (2 * min_margin_pt) - safety_margin_pt
+            available_height = page_h - (2 * min_margin_pt) - safety_margin_pt
+        else:
+            available_width = page_w - (2 * min_margin_pt)
+            available_height = page_h - (2 * min_margin_pt)
+        
+        # Calculate grid more conservatively - ensure frames + gaps fit
+        cols = 1
+        while (cols + 1) * frame_width_pt + cols * min_margin_pt <= available_width:
+            cols += 1
+        
+        rows = 1
+        while (rows + 1) * frame_height_pt + rows * min_margin_pt <= available_height:
+            rows += 1
+        
+        # Additional safety check: verify total space usage
+        total_width_needed = cols * frame_width_pt + (cols + 1) * min_margin_pt
+        total_height_needed = rows * frame_height_pt + (rows + 1) * min_margin_pt
+        
+        if total_width_needed > page_w and cols > 1:
+            cols -= 1
+        if total_height_needed > page_h and rows > 1:
+            rows -= 1
+        
+        # Calculate actual margins by distributing remaining space
+        remaining_width = available_width - (cols * frame_width_pt)
+        remaining_height = available_height - (rows * frame_height_pt)
+        
+        # Distribute remaining space as gaps between and around images
+        gap_x = max(min_margin_pt, remaining_width / (cols + 1))
+        gap_y = max(min_margin_pt, remaining_height / (rows + 1))
+        
+        # ENHANCED DIAGNOSTIC LOGGING for Polaroid overflow issue
+        print(f"PDF MARGIN DIAGNOSTICS (POLAROID FIX)")
+        print(f"Layout: {layout}")
+        print(f"Page size: {page_w:.1f}x{page_h:.1f}pt (A4)")
+        print(f"Minimum margin: {MIN_MARGIN_CM}cm = {min_margin_pt:.1f}pt")
+        print(f"Available space: {available_width:.1f}x{available_height:.1f}pt")
+        print(f"Image size: {size_cm}cm = {size_pt:.1f}pt")
+        if layout == "polaroid":
+            print(f"Polaroid borders: side={side_border_pt:.1f}pt, top={top_border_pt:.1f}pt, bottom={bottom_border_pt:.1f}pt")
+        print(f"Frame size: {frame_width_pt:.1f}x{frame_height_pt:.1f}pt")
+        print(f"Theoretical grid: {int(available_width // frame_width_pt)}x{int(available_height // frame_height_pt)}")
+        print(f"Actual grid: {cols}x{rows}")
+        print(f"Total frame area: {cols * frame_width_pt:.1f}x{rows * frame_height_pt:.1f}pt")
+        print(f"Space check: width {cols * frame_width_pt:.1f} <= {available_width:.1f}? {cols * frame_width_pt <= available_width}")
+        print(f"Space check: height {rows * frame_height_pt:.1f} <= {available_height:.1f}? {rows * frame_height_pt <= available_height}")
+        print(f"Final gaps: x={gap_x:.1f}pt ({gap_x/PT_PER_INCH*CM_PER_INCH:.2f}cm), y={gap_y:.1f}pt ({gap_y/PT_PER_INCH*CM_PER_INCH:.2f}cm)")
+        print(f"Page utilization: {(cols * frame_width_pt / available_width * 100):.1f}% x {(rows * frame_height_pt / available_height * 100):.1f}%")
 
         x = y = 0
         for img in processed:

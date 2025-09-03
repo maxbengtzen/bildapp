@@ -8,27 +8,6 @@ const FileUpload = ({
 }) => {
   const fileInputRef = useRef(null);
 
-  const handleFiles = useCallback((files) => {
-    debugLog('File input change event triggered', {
-      filesLength: files?.length,
-      isIOS
-    });
-    
-    // iOS Safari can sometimes have issues with FileList, so add extra checks
-    const fileArray = [];
-    if (files) {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file) {
-          fileArray.push(file);
-        }
-      }
-    }
-    
-    debugLog('Files extracted from input', { extractedCount: fileArray.length });
-    handleNewFiles(fileArray);
-  }, [debugLog, isIOS]);
-
   const handleNewFiles = useCallback((files) => {
     try {
       debugLog('handleNewFiles called', {
@@ -57,9 +36,51 @@ const FileUpload = ({
     }
   }, [debugLog, selectedFiles.length, onFilesAdd]);
 
+  const handleFiles = useCallback((files) => {
+    debugLog('File input change event triggered', {
+      filesLength: files?.length,
+      isIOS
+    });
+    
+    // iOS Safari can sometimes have issues with FileList, so add extra checks
+    const fileArray = [];
+    if (files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file) {
+          fileArray.push(file);
+        }
+      }
+    }
+    
+    debugLog('Files extracted from input', { extractedCount: fileArray.length });
+    handleNewFiles(fileArray);
+  }, [debugLog, isIOS, handleNewFiles]);
+
   const handleInputChange = useCallback((e) => {
+    debugLog('File input change event triggered', {
+      eventType: e.type,
+      targetFiles: e.target.files,
+      filesLength: e.target.files?.length,
+      isIOS,
+      timestamp: Date.now()
+    });
+    
+    if (!e.target.files) {
+      debugLog('ERROR - e.target.files is null/undefined');
+      return;
+    }
+    
+    debugLog('About to call handleFiles with', {
+      files: e.target.files,
+      filesLength: e.target.files.length
+    });
+    
     handleFiles(e.target.files);
-  }, [handleFiles]);
+    
+    // Clear the input value to prevent browser-specific issues with re-selection
+    e.target.value = '';
+  }, [handleFiles, debugLog, isIOS]);
 
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
@@ -83,11 +104,16 @@ const FileUpload = ({
     }
   }, [isIOS, handleNewFiles]);
 
-  const handleLabelClick = useCallback(() => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  }, []);
+  const handleLabelClick = useCallback((e) => {
+    debugLog('Label clicked', {
+      target: e.target.tagName,
+      currentTarget: e.currentTarget.tagName,
+      timestamp: Date.now()
+    });
+    
+    // Natural label-input association handles the file picker
+    // No manual intervention needed to prevent Edge double-picker issue
+  }, [debugLog]);
 
   // iOS Safari often has issues with drag and drop, so add extra safety
   const dragAndDropProps = !isIOS ? {
@@ -101,28 +127,33 @@ const FileUpload = ({
       <div className="label">
         <span className="label-text font-medium">Bilder</span>
       </div>
-      <label 
+      <div
         className="border-2 border-dashed rounded-2xl p-6 h-32 text-center cursor-pointer hover:bg-base-200 transition flex flex-col justify-center"
-        onClick={handleLabelClick}
         {...dragAndDropProps}
       >
-        <div className="text-base-content/70">
-          <span className="font-medium">Lägg till bilder</span> eller släpp dem här
-        </div>
-        <div className="text-xs opacity-70 mt-1">
-          PNG/JPG/HEIC/HEIF • flera filer stöds
-        </div>
-        <input
-          ref={fileInputRef}
-          id="fileInput"
-          name="images"
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={handleInputChange}
-        />
-      </label>
+        <label
+          htmlFor="fileInput"
+          className="cursor-pointer w-full h-full flex flex-col justify-center"
+          onClick={handleLabelClick}
+        >
+          <div className="text-base-content/70">
+            <span className="font-medium">Lägg till bilder</span> eller släpp dem här
+          </div>
+          <div className="text-xs opacity-70 mt-1">
+            PNG/JPG/HEIC/HEIF • flera filer stöds
+          </div>
+        </label>
+      </div>
+      <input
+        ref={fileInputRef}
+        id="fileInput"
+        name="images"
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleInputChange}
+      />
       {/* File count display */}
       <div className="text-xs text-base-content/70 mt-1" id="imageCount">
         {selectedFiles.length} bilder valda

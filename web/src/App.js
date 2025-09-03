@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import useTheme from './hooks/useTheme';
 import useIOSCompatibility from './hooks/useIOSCompatibility';
 import useFormState from './hooks/useFormState';
 import Header from './components/Header';
@@ -7,7 +6,6 @@ import UploadForm from './components/UploadForm';
 import PDFPreviewModal from './components/PDFPreviewModal';
 
 function App() {
-  const { isDark } = useTheme();
   const { isIOS, debugLog, saveBlob } = useIOSCompatibility();
   const formState = useFormState();
   

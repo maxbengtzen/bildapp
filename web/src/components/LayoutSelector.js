@@ -14,12 +14,12 @@ const LayoutSelector = ({ layout, onLayoutChange }) => {
     }
   ];
 
-  const getCardClasses = (layoutValue) => {
+  const getBadgeClasses = (layoutValue) => {
     const isSelected = layout === layoutValue;
-    return `layout-card card bg-base-100 border-2 transition-colors p-4 text-center h-full flex flex-col justify-center ${
-      isSelected 
-        ? 'border-primary bg-primary/5' 
-        : 'border-base-300 hover:border-primary/50'
+    return `badge badge-lg cursor-pointer transition-colors p-4 h-20 flex flex-col justify-center items-center w-full text-center ${
+      isSelected
+        ? 'badge-primary text-primary-content'
+        : 'bg-base-300 text-base-content hover:bg-base-300/80'
     }`;
   };
 
@@ -28,22 +28,22 @@ const LayoutSelector = ({ layout, onLayoutChange }) => {
       <div className="label">
         <span className="label-text font-medium">Layout</span>
       </div>
-      <div className="flex gap-3 items-stretch">
+      <div className="grid grid-cols-2 gap-3">
         {layouts.map((layoutOption) => (
-          <label key={layoutOption.value} className="cursor-pointer flex-1">
+          <label key={layoutOption.value} className="cursor-pointer">
             <input
               type="radio"
               name="layout"
               value={layoutOption.value}
-              className="hidden layout-radio"
+              className="sr-only"
               checked={layout === layoutOption.value}
               onChange={(e) => onLayoutChange(e.target.value)}
             />
-            <div className={getCardClasses(layoutOption.value)}>
-              <div className="font-medium text-base-content">
+            <div className={getBadgeClasses(layoutOption.value)}>
+              <div className="font-medium leading-tight">
                 {layoutOption.title}
               </div>
-              <div className="text-xs opacity-70 mt-1">
+              <div className="text-xs opacity-70 mt-1 leading-tight">
                 {layoutOption.description}
               </div>
             </div>

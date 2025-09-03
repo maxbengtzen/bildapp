@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import PDFViewer from './PDFViewer';
 
 const PDFPreviewModal = ({ 
   pdfData, 
@@ -9,15 +10,15 @@ const PDFPreviewModal = ({
   isIOS 
 }) => {
   const [currentPdfBlob, setCurrentPdfBlob] = useState(null);
-  const [showEmbed, setShowEmbed] = useState(false);
-  const [showFallback, setShowFallback] = useState(false);
-  const [showLoading, setShowLoading] = useState(true);
   const [supportsShare, setSupportsShare] = useState(false);
 
   useEffect(() => {
     if (!pdfData) return;
 
-    debugLog('Showing PDF preview', { size: pdfData.size, filename: pdfData.filename });
+    debugLog('Showing PDF preview with react-pdf', {
+      size: pdfData.size,
+      filename: pdfData.filename
+    });
     
     try {
       // Convert base64 to blob
@@ -29,55 +30,29 @@ const PDFPreviewModal = ({
       const blob = new Blob([bytes], { type: 'application/pdf' });
       setCurrentPdfBlob(blob);
       
-      debugLog('PDF blob created', { blobSize: blob.size });
+      debugLog('PDF blob created for react-pdf', { blobSize: blob.size });
       
       // Check Web Share API support
       setSupportsShare(navigator.share && isIOS);
       
-      // Detect browsers with poor PDF embed support
-      const isEdge = /Edg/i.test(navigator.userAgent);
-      const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
-      const hasEmbedIssues = isIOS || isEdge || isSafari;
-      
-      debugLog('Browser detection', { isIOS, isEdge, isSafari, hasEmbedIssues });
-      
-      if (hasEmbedIssues) {
-        debugLog('Browser with PDF embed issues detected - using fallback');
-        setShowLoading(false);
-        setShowFallback(true);
-      } else {
-        // Try to display PDF in browsers that might support it (Chrome, Firefox)
-        debugLog('Attempting PDF embed in supported browser');
-        setShowEmbed(true);
-        
-        // Set a timeout for embed loading
-        const embedTimeout = setTimeout(() => {
-          debugLog('PDF embed timeout - showing fallback');
-          setShowLoading(false);
-          setShowEmbed(false);
-          setShowFallback(true);
-        }, 2000);
-        
-        // Cleanup timeout if component unmounts
-        return () => clearTimeout(embedTimeout);
-      }
-      
     } catch (err) {
-      debugLog('ERROR: Failed to show PDF preview', { error: err.message, stack: err.stack });
+      debugLog('ERROR: Failed to create PDF blob', {
+        error: err.message,
+        stack: err.stack
+      });
       alert('Kunde inte visa PDF-förhandsvisning: ' + err.message);
     }
   }, [pdfData, debugLog, isIOS]);
 
-  const handleEmbedLoad = useCallback(() => {
-    debugLog('PDF embed loaded successfully');
-    setShowLoading(false);
+  const handlePdfLoadSuccess = useCallback((info) => {
+    debugLog('react-pdf loaded successfully', info);
   }, [debugLog]);
 
-  const handleEmbedError = useCallback(() => {
-    debugLog('PDF embed failed, showing fallback');
-    setShowLoading(false);
-    setShowEmbed(false);
-    setShowFallback(true);
+  const handlePdfLoadError = useCallback((error) => {
+    debugLog('ERROR: react-pdf failed to load', {
+      error: error.message,
+      stack: error.stack
+    });
   }, [debugLog]);
 
   const handleClose = useCallback(() => {
@@ -143,8 +118,9 @@ const PDFPreviewModal = ({
             <h3 className="font-bold text-lg">PDF Förhandsvisning</h3>
             <p className="text-sm text-base-content/70">{pdfInfo}</p>
           </div>
-          <button 
-            className="btn btn-sm btn-circle btn-ghost" 
+          <button
+            className="btn btn-sm btn-ghost w-8 h-8 p-0"
+            style={{borderRadius: '50%'}}
             onClick={handleClose}
           >
             ✕
@@ -152,52 +128,27 @@ const PDFPreviewModal = ({
         </div>
 
         {/* PDF Viewer */}
-        <div className="bg-base-200 rounded-lg h-[60vh] mb-4 relative overflow-hidden">
-          {showEmbed && currentPdfBlob && (
-            <embed
-              src={URL.createObjectURL(currentPdfBlob)}
-              type="application/pdf"
-              className="w-full h-full rounded-lg"
-              onLoad={handleEmbedLoad}
-              onError={handleEmbedError}
+        <div className="h-[60vh] mb-4">
+          {currentPdfBlob ? (
+            <PDFViewer
+              pdfBlob={currentPdfBlob}
+              debugLog={debugLog}
+              onLoadSuccess={handlePdfLoadSuccess}
+              onLoadError={handlePdfLoadError}
+              className="h-full"
             />
-          )}
-          
-          {showFallback && (
-            <div className="flex items-center justify-center h-full text-center p-8">
-              <div>
-                <div className="text-6xl mb-4">📄</div>
-                <h4 className="text-lg font-semibold text-base-content mb-2">
-                  PDF Förhandsvisning
-                </h4>
-                <p className="text-base-content/70 mb-3">
-                  {isIOS 
-                    ? 'PDF kan inte visas direkt i iOS Safari'
-                    : 'PDF kan inte visas i denna webbläsare'
-                  }
-                </p>
-                <p className="text-sm text-base-content/50 mb-4">
-                  PDF är redo - använd dela- eller ladda ner-knappen nedan
-                </p>
-                <div className="text-sm text-base-content/60 bg-base-100 rounded-lg p-3">
-                  <div className="font-medium">{pdfInfo}</div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {showLoading && (
-            <div className="flex items-center justify-center h-full">
+          ) : (
+            <div className="flex items-center justify-center h-full bg-base-200 rounded-lg">
               <span className="loading loading-spinner loading-lg text-primary"></span>
             </div>
           )}
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap justify-center">
           {supportsShare && (
-            <button 
-              className="btn btn-primary flex-1" 
+            <button
+              className="btn btn-primary w-32"
               onClick={handleShare}
             >
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,8 +157,8 @@ const PDFPreviewModal = ({
               Dela PDF
             </button>
           )}
-          <button 
-            className="btn btn-outline flex-1" 
+          <button
+            className="btn btn-outline w-32"
             onClick={handleDownload}
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,8 +166,8 @@ const PDFPreviewModal = ({
             </svg>
             Ladda ner
           </button>
-          <button 
-            className="btn btn-ghost" 
+          <button
+            className="btn btn-outline w-32"
             onClick={handleCreateNew}
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
