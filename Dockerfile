@@ -1,5 +1,5 @@
 # Stage 1: Build React frontend
-FROM node:22.19.0-alpine AS web-builder
+FROM node:22.19.0 AS web-builder
 WORKDIR /app
 
 # Copy root package.json for workspace setup
