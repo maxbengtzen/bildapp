@@ -9,7 +9,13 @@ RUN npm install
 # Copy web package files and build
 COPY web/package*.json ./web/
 COPY web/ ./web/
-RUN cd web && npm install && npm run build
+
+# Build with Vite (modern, fast, supports Tailwind v4.x)
+RUN cd web && echo "=== BUILDING WITH VITE ===" && \
+    echo "Node version: $(node --version)" && \
+    echo "NPM version: $(npm --version)" && \
+    npm install && \
+    npm run build
 
 # Stage 2: Build Python runtime with Flask backend
 FROM python:3.13-slim AS final

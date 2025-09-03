@@ -7,22 +7,21 @@
     "pdfjs-dist": "^5.4.149",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-scripts": "5.0.1",
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "4.1.12",
+    "@tailwindcss/vite": "^4.1.12",
+    "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^9.2.1",
     "daisyui": "^5.1.6",
-    "tailwindcss": "^4.1.12"
+    "tailwindcss": "^4.1.12",
+    "vite": "^5.1.0"
   },
   "scripts": {
-    "start": "concurrently \"npm run watch:css\" \"react-scripts start\" --names \"CSS,REACT\" --prefix-colors \"cyan,blue\"",
-    "build": "npm run build:css && react-scripts build",
-    "build:css": "tailwindcss -i src/styles.css -o src/index.css --build",
-    "watch:css": "tailwindcss -i src/styles.css -o src/index.css --watch",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "start": "vite",
+    "build": "vite build",
+    "test": "vitest",
+    "preview": "vite preview",
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix"
   },

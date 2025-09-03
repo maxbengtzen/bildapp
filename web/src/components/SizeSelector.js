@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
-const SizeSelector = ({ 
-  size, 
-  isManualMode, 
-  onSizeChange, 
-  onPresetSelect, 
-  onManualModeEnable 
+const SizeSelector = ({
+  size,
+  isManualMode,
+  onSizeChange,
+  onPresetSelect,
+  onManualModeEnable
 }) => {
+  const gridRef = useRef(null);
   const presetSizes = [3, 5, 7];
+
+  useEffect(() => {
+    // Debug: Log size selector grid dimensions
+    if (gridRef.current) {
+      const rect = gridRef.current.getBoundingClientRect();
+      const parentRect = gridRef.current.parentElement?.getBoundingClientRect();
+      console.log('DEBUG: SizeSelector grid dimensions', {
+        gridWidth: rect.width,
+        gridScrollWidth: gridRef.current.scrollWidth,
+        parentWidth: parentRect?.width,
+        isOverflowing: gridRef.current.scrollWidth > rect.width,
+        viewport: `${window.innerWidth}x${window.innerHeight}`
+      });
+    }
+  }, []);
 
   const handlePresetClick = (presetSize) => {
     onPresetSelect(presetSize);
@@ -66,7 +82,7 @@ const SizeSelector = ({
       </div>
       
       {/* Unified badge system for all devices */}
-      <div className="grid grid-cols-4 gap-2 mb-3">
+      <div ref={gridRef} className="grid grid-cols-4 gap-2 mb-3">
         {presetSizes.map((presetSize) => (
           <button
             key={presetSize}
