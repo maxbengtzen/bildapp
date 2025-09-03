@@ -2,36 +2,48 @@
 
 ![Cover photo](/assets/cover.png)
 
-En modern Progressive Web App (PWA) byggd med React och Flask som tar flera uppladdade bilder, beskär dem till kvadrater och arrangerar dem i ett utskriftsvänligt A4-PDF. Appen är optimerad för mobila enheter med särskilt fokus på iOS Safari-kompatibilitet.
+En modern Progressive Web App (PWA) byggd med React 19 och Flask som tar flera uppladdade bilder, beskär dem till kvadrater och arrangerar dem i ett utskriftsvänligt A4-PDF. Appen är optimerad för mobila enheter med särskilt fokus på iOS Safari-kompatibilitet.
 
 ## ✨ Funktioner
 
 - **🔲 PDF-generering**: Automatisk beskärning till kvadrater och smart layout på A4-format
+- **📱 PDF-förhandsvisning**: Interaktiv PDF-viewer med pdfjs-dist, sidnavigering och zoom
+- **🍎 iOS-optimerad**: Inbyggt stöd för iOS Safari med Web Share API och native fildelning
+- **🎨 Polaroid-layout**: Nya layoutalternativ med vita ramar och autentiska proportioner
 - **📱 PWA-funktionalitet**: Installeras som en riktig app, fungerar offline med service worker
-- **🍎 iOS-optimerad**: Inbyggt stöd för iOS Safari med PDF-förhandsvisning och native sharing
-- **🌓 Automatisk temakväxling**: Följer systemets mörkt/ljus läge-inställningar
+- **🌓 Automatisk temakväxling**: Följer systemets mörkt/ljus läge-inställningar med DaisyUI
 - **📸 Modernt bildstöd**: HEIC/HEIF-format (iPhone) samt traditionella PNG/JPG
 - **⚡ Responsiv design**: Fungerar perfekt på mobil, tablet och desktop
-- **🎨 Anpassad design**: Modern UI med Bricolage Grotesque-typsnitt och teal-färgschema
-- **⚛️ React-baserad**: Modern komponentarkitektur med hooks och state management
+- **🎨 Modern UI**: Tailwind CSS 4 + DaisyUI med Bricolage Grotesque-typsnitt
+- **⚛️ React 19**: Senaste React-versionen med hooks, custom state management och komponentarkitektur
+- **🚀 Vite build**: Snabb utveckling och optimerad produktion med kod-splitting
 
 ## 🗂️ Projektstruktur
 
 ```
 gridprint/
-├── web/              # React frontend application
+├── web/              # React 19 frontend application
 │   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── hooks/         # Custom React hooks
-│   │   └── styles.css     # daisyUI + Tailwind CSS 4 config
+│   │   ├── components/    # React components (Header, Upload, PDF Preview, etc.)
+│   │   ├── hooks/         # Custom React hooks (useFormState, useIOSCompatibility, useTheme)
+│   │   ├── App.jsx        # Main React application component
+│   │   ├── index.jsx      # React 19 root with service worker registration
+│   │   └── styles.css     # Tailwind CSS 4 + DaisyUI configuration
 │   ├── public/            # Static assets and PWA files
-│   └── package.json       # Frontend dependencies
+│   │   ├── manifest.json  # PWA manifest
+│   │   ├── sw.js          # Enhanced service worker
+│   │   ├── pdf.worker.min.mjs # PDF.js worker
+│   │   ├── fonts/         # Bricolage Grotesque font files
+│   │   └── icons/         # PWA icons
+│   ├── build/             # Vite build output (generated)
+│   ├── package.json       # Frontend dependencies (React 19, Vite, pdfjs-dist)
+│   └── vite.config.mjs    # Vite build configuration
 ├── api/              # Flask backend application
-│   ├── app.py             # Main Flask application
+│   ├── app.py             # Main Flask application with PDF preview support
 │   └── requirements.txt   # Python dependencies
 ├── assets/           # Shared assets (fonts, icons, cover)
-├── package.json      # Root project configuration
-├── Dockerfile        # Multi-stage Docker build
+├── package.json      # Root project configuration and scripts
+├── Dockerfile        # Multi-stage Docker build (Node 22 + Python 3.13)
 └── docker-compose.example.yml # Container orchestration template
 ```
 
@@ -64,26 +76,28 @@ gridprint/
 
 ## 💻 Utveckling
 
-### Frontend (React)
+### Frontend (React 19)
 
-React-appen använder modern hooks-baserad arkitektur:
+React-appen använder modern hooks-baserad arkitektur med Vite:
 
 ```bash
-cd packages/web
+cd web
 npm install
-npm start          # Utvecklingsserver
-npm run build      # Produktionsversion
-npm test          # Tester
+npm start          # Vite utvecklingsserver (port 3000)
+npm run build      # Vite produktionsversion
+npm run preview    # Förhandsgranska produktion lokalt
+# npm test         # Vitest (ej installerat ännu)
+# npm run lint     # ESLint (ej installerat ännu)
 ```
 
 ### Backend (Flask)
 
-Flask API hanterar bildbehandling och PDF-generering:
+Flask API hanterar bildbehandling och PDF-generering med förhandsvisning:
 
 ```bash
-cd packages/api
+cd api
 pip install -r requirements.txt
-python app.py     # Utvecklingsserver
+python app.py     # Flask utvecklingsserver (port 5000)
 ```
 
 ### Monorepo-kommandon
@@ -130,17 +144,65 @@ npm run install:all        # Installera alla dependencies
 
 ## 🌐 Webbläsarkompatibilitet
 
-- **✅ Chrome/Chromium**: Full funktionalitet
-- **✅ Firefox**: Full funktionalitet
-- **✅ Safari (macOS)**: PDF-förhandsvisning med fallback
-- **✅ iOS Safari**: Optimerad upplevelse med native sharing
-- **✅ Edge**: Fungerar med PDF-fallback
+### PDF-förhandsvisning (pdfjs-dist)
+- **✅ Chrome/Chromium**: Full PDF-funktionalitet med Canvas-rendering
+- **✅ Firefox**: Native PDF.js-integration (optimal prestanda)
+- **✅ Safari (macOS)**: PDF-förhandsvisning med WebAssembly-stöd
+- **✅ iOS Safari**: Optimerad upplevelse med Web Share API + native fildelning
+- **✅ Edge**: Full PDF-funktionalitet med modern WebAssembly
+
+### PWA & Moderna webbstandarder
+- **✅ Service Workers**: Alla moderna webbläsare
+- **✅ Web Share API**: iOS Safari, Android Chrome
+- **✅ Canvas API**: Universellt stöd för PDF-rendering
+- **✅ ES Modules**: Stöds av alla målwebbläsare
+
+### Fallback-strategier
+- **PDF-nedladdning**: När förhandsvisning ej stöds
+- **iOS-specifik**: Öppnar PDF i ny flik för maximal kompatibilitet
+- **Progressive Enhancement**: Grundfunktionalitet fungerar överallt
 
 ## 🔧 API-endpoints
 
-- `POST /upload`: Ladda upp bilder och generera PDF
-- `POST /debug`: Debug-endpoint för felsökning
-- `GET /health`: Hälsokontroll och funktionalitetsstatus
+### `POST /upload`
+Ladda upp bilder och generera PDF med förhandsvisning eller direkt nedladdning.
+
+**Parametrar:**
+- `images`: Bildfiler (multipart/form-data)
+- `size`: Bildstorlek i cm (standard: 5.5)
+- `layout`: Layout-typ - `"standard"` eller `"polaroid"` (standard: "standard")
+- `preview`: `"true"` för JSON-svar med base64 PDF-data, `"false"` för direkt nedladdning
+
+**Svar (preview=true):**
+```json
+{
+  "success": true,
+  "pdf_data": "base64-encoded-pdf-data",
+  "filename": "bilder.pdf",
+  "size": 1234567,
+  "image_count": 8,
+  "grid_info": {
+    "cols": 3,
+    "rows": 3,
+    "size_cm": 5.5,
+    "layout": "polaroid"
+  }
+}
+```
+
+### `POST /debug`
+Debug-endpoint för felsökning av bildformat och processeringsfel.
+
+### `GET /health`
+Hälsokontroll och funktionalitetsstatus inklusive HEIC/HEIF-stöd.
+
+### `GET /`
+Servar React-applikationen (SPA).
+
+### Static Assets
+- `GET /favicon.svg`: PWA-favicon
+- `GET /manifest.json`: PWA-manifest
+- `GET /sw.js`: Service worker
 
 ## 🎯 PWA-funktioner
 
@@ -152,17 +214,35 @@ npm run install:all        # Installera alla dependencies
 
 ## 🏗️ Arkitektur
 
-### React Frontend
-- **Component-based**: Modulära, återanvändbara komponenter
-- **Custom Hooks**: Separation av business logic och UI
-- **State Management**: React hooks för lokal state
-- **iOS Compatibility**: Dedikerat stöd för Safari-specifika funktioner
+### React 19 Frontend
+- **Modern Components**: Funktionella komponenter med React 19 hooks
+- **Custom Hooks**:
+  - `useFormState`: Komplex formulärhantering och validering
+  - `useIOSCompatibility`: Platform-specifik funktionalitet och debug-logging
+  - `useTheme`: Automatisk systemtema-detection med DaisyUI
+- **State Management**: Lokalt state med `useState` och `useCallback` optimering
+- **PDF Integration**: pdfjs-dist för client-side PDF-rendering med Canvas API
+- **iOS Compatibility**: Web Share API och Safari-specifika workarounds
+
+### Modern Build & Styling
+- **Vite**: Snabb utveckling med HMR och optimerad produktions-build
+- **Tailwind CSS 4**: Utility-first styling med CSS-variabler
+- **DaisyUI**: Komponentbibliotek med tema-stöd
+- **Code Splitting**: Separata chunks för vendor, PDF och applikationskod
 
 ### Flask Backend
-- **RESTful API**: Clean endpoints för bilduppladdning och PDF-generering
-- **Image Processing**: PIL/Pillow för bildmanipulation
-- **PDF Generation**: ReportLab för PDF-skapande
+- **Enhanced API**: RESTful endpoints med förhandsvisning och direkt nedladdning
+- **Preview Mode**: JSON-svar med base64 PDF-data för client-side rendering
+- **Layout Support**: Standard och Polaroid-layout med autentiska proportioner
+- **Image Processing**: PIL/Pillow för bildmanipulation med EXIF-orientering
+- **PDF Generation**: ReportLab för avancerad PDF-skapande
 - **Multi-format Support**: HEIC/HEIF-stöd via pillow-heif
+
+### Nya Dependencies & Syfte
+- **pdfjs-dist@5.4.149**: Mozilla PDF.js för robust PDF-rendering i webbläsare
+- **@fontsource/bricolage-grotesque@5.2.8**: Modern typografi från Google Fonts
+- **@tailwindcss/vite@4.1.12**: Tailwind CSS 4 integration för Vite
+- **daisyui@5.1.6**: UI-komponenter och tema-system för Tailwind
 
 ## 📞 Kontakt
 
