@@ -30,5 +30,5 @@ build/
 *.log
 .coverage
 
-# Ignore Continue project settings
-/.continue/
+# Ignore .gitignore
+.gitignore

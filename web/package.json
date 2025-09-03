@@ -1,0 +1,54 @@
+{
+  "name": "gridprint-web",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@fontsource/bricolage-grotesque": "^5.2.8",
+    "pdfjs-dist": "^5.4.149",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "web-vitals": "^5.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^9.2.1",
+    "daisyui": "^5.1.6",
+    "tailwindcss": "^4.1.12",
+    "vite": "^5.1.0"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "test": "vitest",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.jsx",
+    "lint:fix": "eslint src --ext .js,.jsx --fix"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "^1.30.1",
+    "lightningcss-linux-arm64-gnu": "^1.30.1",
+    "lightningcss-darwin-x64": "^1.30.1",
+    "lightningcss-darwin-arm64": "^1.30.1",
+    "lightningcss-win32-x64-msvc": "^1.30.1"
+  },
+  "proxy": "http://localhost:5000"
+}

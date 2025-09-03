@@ -1,16 +1,32 @@
-# Stage 1: build frontend assets using Node
-FROM node:18-alpine AS nodebuilder
+# Stage 1: Build React frontend
+FROM node:22-bullseye AS web-builder
 WORKDIR /app
 
-# Copy frontend package files and install dependencies, then build the production CSS
-COPY frontend/package*.json ./frontend/
-COPY frontend/ ./frontend/
-RUN cd frontend \
-    && npm install \
-    && npm run build:css || (echo "Build failed:" && cat npm-debug.log || true)
+# Install build dependencies for native modules
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# Stage 2: final runtime image using Python
-FROM python:3.11-slim
+# Copy root package.json for workspace setup
+COPY package*.json ./
+RUN npm install
+
+# Copy web package files and build
+COPY web/package*.json ./web/
+COPY web/ ./web/
+
+# Build with Vite (modern, fast, supports Tailwind v4.x)
+RUN cd web && echo "=== BUILDING WITH VITE ===" && \
+    echo "Node version: $(node --version)" && \
+    echo "NPM version: $(npm --version)" && \
+    npm cache clean --force && \
+    npm install && \
+    npm run build
+
+# Stage 2: Build Python runtime with Flask backend
+FROM python:3.13-slim AS final
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
@@ -18,17 +34,20 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Install minimal OS deps and Python requirements
-COPY backend/requirements.txt ./
+COPY api/requirements.txt ./
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates curl \
   && pip install --no-cache-dir -r requirements.txt \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy backend code
-COPY backend/ ./
+COPY api/ ./
 
-# Copy the whole frontend folder from the builder stage into /frontend (Flask expects ../frontend)
-COPY --from=nodebuilder /app/frontend /frontend
+# Copy built React app from web-builder stage
+COPY --from=web-builder /app/web/build /frontend
+
+# Update Flask to serve from the new build directory
+ENV STATIC_FOLDER=/frontend
 
 EXPOSE 5000
 
