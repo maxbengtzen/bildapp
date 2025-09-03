@@ -1,5 +1,5 @@
 # Stage 1: Build React frontend
-FROM node:22.19.0 AS web-builder
+FROM node:22-bullseye AS web-builder
 WORKDIR /app
 
 # Install build dependencies for native modules
