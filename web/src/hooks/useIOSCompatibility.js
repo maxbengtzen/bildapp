@@ -11,20 +11,17 @@ const useIOSCompatibility = () => {
 
   const debugLog = useCallback((message, data = null) => {
     const timestamp = new Date().toISOString();
-    const logEntry = { 
-      timestamp, 
-      message, 
-      data, 
-      userAgent: navigator.userAgent 
+    const logEntry = {
+      timestamp,
+      message,
+      data,
+      userAgent: navigator.userAgent
     };
     
     setDebugLogs(prev => [...prev, logEntry]);
     console.log(`[DEBUG ${timestamp}] ${message}`, data || '');
     
-    // On iOS, show critical errors in alerts for debugging
-    if (isIOS && (message.includes('ERROR') || message.includes('FAIL'))) {
-      setTimeout(() => alert(`iOS Debug: ${message}`), 100);
-    }
+    // iOS debug alerts removed - keeping console logging only
   }, [isIOS]);
 
   useEffect(() => {
@@ -42,8 +39,22 @@ const useIOSCompatibility = () => {
     };
 
     const handleUnhandledRejection = (e) => {
+      // Filter out common harmless promise rejections
+      const reason = e.reason?.toString() || '';
+      
+      // Skip service worker related rejections that are expected
+      if (reason.includes('quota') ||
+          reason.includes('ServiceWorker') ||
+          reason.includes('cache') ||
+          reason.includes('AbortError') ||
+          reason.includes('NetworkError')) {
+        console.debug('Ignoring harmless promise rejection:', reason);
+        return;
+      }
+      
+      // Only log unexpected promise rejections
       debugLog('ERROR: Unhandled promise rejection', {
-        reason: e.reason?.toString(),
+        reason: reason,
         promise: e.promise
       });
     };

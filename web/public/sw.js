@@ -119,7 +119,10 @@ self.addEventListener('fetch', (event) => {
         if (isSame && response && response.status === 200 && response.type === 'basic') {
           const copy = response.clone();
           const cache = await caches.open(CACHE_NAME);
-          cache.put(request, copy).catch(() => {/* ignore quota errors */});
+          // Handle cache errors more gracefully to prevent unhandled rejections
+          cache.put(request, copy).catch((error) => {
+            console.debug('Cache storage failed (likely quota exceeded):', error.name);
+          });
         }
         return response;
       } catch {
